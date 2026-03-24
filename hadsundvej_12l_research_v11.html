@@ -82,11 +82,22 @@
         <div id="data-panel">
             <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid var(--neon-cyan);">ENVIRONMENTAL_METRICS</div>
             <div class="data-row"><span>POLLUTANT:</span> <span class="pink-label">TCE / CHLORINATED</span></div>
-            <div class="data-row"><span>CONCENTRATION:</span> <span class="pink-label">12.5 µg/l (BASEMENT)</span></div>
+            <div class="data-row"><span>CONCENTRATION:</span> <span class="pink-label">12.5 µg/l (P-12A)</span></div>
             <div class="data-row"><span>RISK_LEVEL:</span> <span class="pink-label">V2_KORTLAGT</span></div>
             <div class="data-row"><span>MIGRATION:</span> <span>SOUTH_EAST (HOFOR)</span></div>
             <div class="data-row"><span>FOUNDATION:</span> <span>548_PILES (-8.0m)</span></div>
             <div class="data-row"><span>STATUS:</span> <span style="animation: blink 1s infinite;">MONITORING_ACTIVE</span></div>
+
+            <div style="font-weight: bold; margin-top: 15px; margin-bottom: 10px; border-bottom: 1px solid var(--neon-cyan);">WELL_DATA</div>
+            <div class="data-row"><span>PR-101 (-15.0m):</span> <span class="pink-label">4.2 µg/l VC</span></div>
+            <div class="data-row"><span>PR-102 (-12.5m):</span> <span>1.1 µg/l VC</span></div>
+            <div class="data-row"><span>PR-103 (-18.0m):</span> <span>0.2 µg/l VC</span></div>
+            <div class="data-row"><span>P-12A (-8.0m):</span> <span class="pink-label">12.5 µg/l VC (CRIT)</span></div>
+
+            <div style="font-weight: bold; margin-top: 15px; margin-bottom: 10px; border-bottom: 1px solid var(--neon-cyan);">LOGISTICS & SAFETY</div>
+            <div class="data-row"><span>FIREWALLS:</span> <span>EI60 INSTALLED</span></div>
+            <div class="data-row"><span>VENTILATION:</span> <span>ROOF_VENTS_ACTIVE</span></div>
+            <div class="data-row"><span>SPRINKLER_RES:</span> <span>120m3 (B50)</span></div>
         </div>
 
         <div id="status-bar">
@@ -147,6 +158,7 @@
 
         function createMainStructure() {
             const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
+            const dimCyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.4 });
             
             // Hovedbygning (68.5m x 50m x 6.5m)
             const geometry = new THREE.BoxGeometry(68.5, 6.5, 50);
@@ -155,22 +167,50 @@
             main.position.y = 3.25;
             buildingGroup.add(main);
 
+            // Røgudluftning (Røgleme i tagkonstruktion)
+            const smokeVentGeom = new THREE.BoxGeometry(2, 0.5, 2);
+            const smokeVentEdges = new THREE.EdgesGeometry(smokeVentGeom);
+            for (let x = -20; x <= 20; x += 15) {
+                for (let z = -15; z <= 15; z += 15) {
+                    const vent = new THREE.LineSegments(smokeVentEdges, cyanMat);
+                    vent.position.set(x, 6.75, z);
+                    buildingGroup.add(vent);
+                }
+            }
+
+            // Brandsektionering (Interne brandvægge EI60)
+            const firewallGeom = new THREE.PlaneGeometry(50, 6.5);
+            const firewallEdges = new THREE.EdgesGeometry(firewallGeom);
+            const firewall1 = new THREE.LineSegments(firewallEdges, dimCyanMat);
+            firewall1.rotation.y = Math.PI / 2;
+            firewall1.position.set(0, 3.25, 0);
+            buildingGroup.add(firewall1);
+
+            const firewall2 = new THREE.LineSegments(firewallEdges, dimCyanMat);
+            firewall2.rotation.y = Math.PI / 2;
+            firewall2.position.set(-20, 3.25, 0);
+            buildingGroup.add(firewall2);
+
             // Vinduer
             const winGeom = new THREE.BoxGeometry(3, 1.5, 0.1);
+            const winEdges = new THREE.EdgesGeometry(winGeom);
             for (let x = -30; x <= 30; x += 8) {
-                const win = new THREE.LineSegments(new THREE.EdgesGeometry(winGeom), cyanMat);
+                const win = new THREE.LineSegments(winEdges, cyanMat);
                 win.position.set(x, 4.5, 25);
                 buildingGroup.add(win);
             }
 
             // Døre
             const doorGeom = new THREE.BoxGeometry(1.2, 2.2, 0.1);
-            const door = new THREE.LineSegments(new THREE.EdgesGeometry(doorGeom), cyanMat);
+            const doorEdges = new THREE.EdgesGeometry(doorGeom);
+            const door = new THREE.LineSegments(doorEdges, cyanMat);
             door.position.set(-33, 1.1, 25);
             buildingGroup.add(door);
 
             // Transformer (1000 kVA)
-            const trans = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(3, 3, 3)), cyanMat);
+            const transGeom = new THREE.BoxGeometry(3, 3, 3);
+            const transEdges = new THREE.EdgesGeometry(transGeom);
+            const trans = new THREE.LineSegments(transEdges, cyanMat);
             trans.position.set(-40, 1.5, -20);
             buildingGroup.add(trans);
         }
@@ -186,8 +226,9 @@
 
             // Trappe
             const stairStep = new THREE.BoxGeometry(2, 0.1, 0.4);
+            const stairEdges = new THREE.EdgesGeometry(stairStep);
             for (let i = 0; i < 18; i++) {
-                const step = new THREE.LineSegments(new THREE.EdgesGeometry(stairStep), cyanMat);
+                const step = new THREE.LineSegments(stairEdges, cyanMat);
                 step.position.set(-14, 0.1 + (i * 0.18), 10 + (i * 0.4));
                 buildingGroup.add(step);
             }
@@ -198,8 +239,9 @@
             
             // Læsseporte (4.0m x 4.2m)
             const gateGeom = new THREE.BoxGeometry(4, 4.2, 0.1);
+            const gateEdges = new THREE.EdgesGeometry(gateGeom);
             for (let x = -10; x <= 30; x += 10) {
-                const gate = new THREE.LineSegments(new THREE.EdgesGeometry(gateGeom), cyanMat);
+                const gate = new THREE.LineSegments(gateEdges, cyanMat);
                 gate.position.set(x, 2.1, 25);
                 buildingGroup.add(gate);
             }
@@ -207,8 +249,9 @@
             // Reoler
             const rackGeom = new THREE.BoxGeometry(4, 5.5, 30);
             const rackMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1 });
+            const rackEdges = new THREE.EdgesGeometry(rackGeom);
             for (let x = -10; x <= 30; x += 10) {
-                const rack = new THREE.LineSegments(new THREE.EdgesGeometry(rackGeom), rackMat);
+                const rack = new THREE.LineSegments(rackEdges, rackMat);
                 rack.position.set(x, 2.75, -5);
                 buildingGroup.add(rack);
             }
@@ -225,17 +268,19 @@
 
             // Trappe til kælder
             const stairStep = new THREE.BoxGeometry(2, 0.1, 0.4);
+            const stairEdges = new THREE.EdgesGeometry(stairStep);
             for (let i = 0; i < 20; i++) {
-                const step = new THREE.LineSegments(new THREE.EdgesGeometry(stairStep), pinkMat);
+                const step = new THREE.LineSegments(stairEdges, pinkMat);
                 step.position.set(-34, -0.1 - (i * 0.15), 1 - (i * 0.4));
                 buildingGroup.add(step);
             }
 
             // Pæle (548 stk)
             const pileGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -8, 0)]);
+            const pileMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.1 });
             for (let x = -34; x <= 34; x += 3.5) {
                 for (let z = -25; z <= 25; z += 3.5) {
-                    const pile = new THREE.LineSegments(pileGeom, new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.1 }));
+                    const pile = new THREE.LineSegments(pileGeom, pileMat);
                     pile.position.set(x, 0, z);
                     buildingGroup.add(pile);
                 }
@@ -250,6 +295,7 @@
 
         function createHazardSystem() {
             const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 });
+            const wellMat = new THREE.LineBasicMaterial({ color: 0xff3366 });
             
             // TCE Plume (Migration mod HOFOR)
             const plumeGeom = new THREE.BoxGeometry(20, 10, 40);
@@ -272,6 +318,31 @@
             const reservoir = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(6, 4, 5)), pinkMat);
             reservoir.position.set(20, -2, -15);
             buildingGroup.add(reservoir);
+
+            // Boringsoversigt & Miljødata (Pejlerør)
+            // PR-101: -15.0m, PR-102: -12.5m, PR-103: -18.0m, P-12A: -8.0m
+            const wells = [
+                { id: 'PR-101', depth: 15.0, pos: [-12, 0, -8] },
+                { id: 'PR-102', depth: 12.5, pos: [18, 0, 10] },
+                { id: 'PR-103', depth: 18.0, pos: [5, 0, -12] },
+                { id: 'P-12A',  depth: 8.0,  pos: [-25.75, 0, 13] } // In basement area
+            ];
+
+            const markerGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(0.8, 0.8, 0.8));
+
+            wells.forEach(w => {
+                const wellGeom = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(0, -w.depth, 0)
+                ]);
+                const well = new THREE.LineSegments(wellGeom, wellMat);
+                well.position.set(...w.pos);
+                buildingGroup.add(well);
+
+                const marker = new THREE.LineSegments(markerGeom, wellMat);
+                marker.position.set(w.pos[0], 0.4, w.pos[2]);
+                buildingGroup.add(marker);
+            });
         }
 
         function onWindowResize() {
