@@ -137,10 +137,11 @@
             // Tårne med detaljer
             const towerGeom = new THREE.BoxGeometry(2.5, 8, 2.5);
             const towerEdges = new THREE.EdgesGeometry(towerGeom);
+            const towerMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
             const pos = [[-3.75, 1.5, -6.75], [3.75, 1.5, -6.75], [-3.75, 1.5, 6.75], [3.75, 1.5, 6.75]];
             
             pos.forEach(p => {
-                const tower = new THREE.LineSegments(towerEdges, new THREE.LineBasicMaterial({ color: 0x00ffcc }));
+                const tower = new THREE.LineSegments(towerEdges, towerMat);
                 tower.position.set(...p);
                 buildingGroup.add(tower);
             });
@@ -150,10 +151,11 @@
             // Gavl/Tag detaljer
             const roofGeom = new THREE.ConeGeometry(1.8, 3, 4);
             const roofEdges = new THREE.EdgesGeometry(roofGeom);
+            const roofMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
             const pos = [[-3.75, 7, -6.75], [3.75, 7, -6.75], [-3.75, 7, 6.75], [3.75, 7, 6.75]];
             
             pos.forEach(p => {
-                const roof = new THREE.LineSegments(roofEdges, new THREE.LineBasicMaterial({ color: 0x00ffcc }));
+                const roof = new THREE.LineSegments(roofEdges, roofMat);
                 roof.rotation.y = Math.PI / 4;
                 roof.position.set(...p);
                 buildingGroup.add(roof);
