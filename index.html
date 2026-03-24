@@ -24,7 +24,6 @@
             height: 100vh;
         }
 
-        /* Sidebar Styling */
         #sidebar {
             width: var(--sidebar-width);
             height: 100%;
@@ -101,7 +100,6 @@
             text-shadow: 0 0 5px var(--neon-pink);
         }
 
-        /* Main Content Styling */
         #main-container {
             flex-grow: 1;
             position: relative;
@@ -141,7 +139,6 @@
             box-shadow: 0 0 15px var(--neon-pink);
         }
 
-        /* Layer Control Panel */
         #layer-control {
             position: absolute;
             bottom: 60px;
@@ -167,10 +164,6 @@
             transition: color 0.3s;
         }
 
-        .layer-item:hover {
-            color: var(--neon-cyan);
-        }
-
         .layer-item.active {
             color: var(--neon-cyan);
         }
@@ -182,23 +175,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
         }
 
         .layer-item.active .layer-checkbox {
             background: var(--neon-cyan);
             box-shadow: 0 0 10px var(--neon-cyan);
-            border-color: var(--neon-cyan);
-        }
-
-        .layer-item.active.pink {
-            color: var(--neon-pink);
         }
 
         .layer-item.active.pink .layer-checkbox {
             background: var(--neon-pink);
             box-shadow: 0 0 10px var(--neon-pink);
-            border-color: var(--neon-pink);
         }
 
         #status-bar { 
@@ -208,55 +194,29 @@
             background: rgba(0, 255, 204, 0.1); 
             padding: 5px 15px; 
             border-left: 3px solid var(--neon-cyan);
-            pointer-events: none;
             display: flex;
             gap: 20px;
-            min-width: 500px;
+            min-width: 400px;
         }
 
         #scanner-text {
             color: var(--neon-pink);
-            font-family: monospace;
-            min-width: 150px;
         }
 
         #controls-hint { 
             position: absolute; 
-            bottom: 20px; 
-            right: 20px; 
-            color: #444; 
-            font-size: 10px; 
-            pointer-events: none;
-        }
-
-        /* Scanline effect */
-        #ui-overlay::before {
-            content: " ";
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: rgba(0, 255, 204, 0.05);
-            animation: scan 4s linear infinite;
-        }
-
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
+            bottom: 20px; right: 20px; 
+            color: #444; font-size: 10px; 
         }
 
         canvas { display: block; }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); }
-        ::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan); }
     </style>
 </head>
 <body>
     <div id="sidebar">
         <div id="sidebar-header">
             <h1>By-Research</h1>
-            <div style="font-size: 9px; color: #666; margin-top: 5px;">ARCHITECTURAL_INTELLIGENCE_v1.0</div>
+            <div style="font-size: 9px; color: #666; margin-top: 5px;">TACTICAL_SUITE_v7.0</div>
         </div>
         
         <div id="nav-list">
@@ -266,9 +226,7 @@
         </div>
 
         <div id="metadata-panel">
-            <div id="metadata-content">
-                <!-- Dynamic Content -->
-            </div>
+            <div id="metadata-content"></div>
         </div>
     </div>
 
@@ -280,22 +238,21 @@
 
             <div id="status-bar">
                 <span>SYSTEM_READY</span>
-                <span>SOURCE: <span id="source-id">HELSINGØR_STATION</span></span>
+                <span>SOURCE: <span id="source-id">HELSINGØR</span></span>
                 <span>SCANNER: [<span id="scanner-text">F3:A1:09:88</span>]</span>
-                <span>INTEGRITY: 99.8%</span>
             </div>
 
             <div id="layer-control">
                 <div class="layer-item active" onclick="toggleLayer('architecture', this)">
-                    <div class="layer-checkbox"></div> Architecture (Cyan)
+                    <div class="layer-checkbox"></div> Architecture
                 </div>
                 <div class="layer-item pink active" onclick="toggleLayer('substructure', this)">
-                    <div class="layer-checkbox"></div> Sub-Structure (Pink)
+                    <div class="layer-checkbox"></div> Sub-Structure
                 </div>
                 <div class="layer-item pink active" onclick="toggleLayer('hazard', this)">
-                    <div class="layer-checkbox"></div> Hazard Analysis (Pulse)
+                    <div class="layer-checkbox"></div> Hazard Analysis
                 </div>
-                <div class="layer-item pink active" onclick="toggleLayer('safety', this)">
+                <div class="layer-item active" onclick="toggleLayer('safety', this)">
                     <div class="layer-checkbox"></div> Safety & Compliance
                 </div>
                 <div class="layer-item active" onclick="toggleLayer('energy', this)">
@@ -322,8 +279,8 @@
 
         let scene, camera, renderer, controls;
         let helsingorGroup, ejbyGroup, hadsundvejGroup;
-        let xrayEnabled = false;
         let currentSubject = 'helsingor';
+        let xrayEnabled = false;
 
         const layers = {
             architecture: true,
@@ -336,47 +293,37 @@
         const subjects = {
             helsingor: {
                 id: 'HELSINGØR_STATION',
-                title: 'Stationspladsen 3',
+                title: 'Helsingør Station',
                 metadata: {
                     by: 'Helsingør',
-                    cvr: 'DATA_UNAVAILABLE',
                     aarstal: '1891',
                     arkitekt: 'Holsøe & Wenck',
-                    stilart: 'Nederlandsk Renæssance',
-                    dybde: '-6.0m',
                     fundament: '1.600 træpæle',
-                    tracks: '5 (Lineart Active)',
-                    status: 'Fredet (1990)',
-                    special: 'KONGELIG_VENTESAL_DETECTED'
+                    tracks: '5 Tracks',
+                    special: 'ROYAL_WAITING_ROOM'
                 }
             },
             ejby: {
                 id: 'EJBYBUNKEREN',
-                title: 'Vestvolden Rødovre',
+                title: 'Ejbybunkeren',
                 metadata: {
-                    by: 'København',
-                    cvr: 'DATA_UNAVAILABLE',
-                    type: 'Kommandobunker',
+                    by: 'Rødovre',
                     periode: '1952-1954',
+                    type: 'Cold War Command',
                     dybde: '-12.0m',
-                    materiale: 'Armeret Beton',
-                    air_filtration: 'GAS-SAFE / HEPA',
-                    status: 'Museum / Kold Krig',
-                    special: 'RADIATION_SHIELDING_ACTIVE'
+                    air: 'Gas-Safe HEPA',
+                    special: 'RADIATION_SHIELD'
                 }
             },
             hadsundvej12l: {
                 id: 'HADSUNDVEJ_12L',
-                title: 'Hadsundvej 12L (V7)',
+                title: 'Hadsundvej 12L',
                 metadata: {
-                    by: 'Rødovre',
-                    omraade: 'Islevdal',
                     tenant: 'Flytte Møller',
                     fire_class: 'EI60',
-                    fire_load: 'High (Furniture Storage)',
-                    miljoestatus: 'Vidensniveau 2 (V2)',
-                    bygningsareal: '3.427 m²',
-                    special: 'TACTICAL_SUITE_ACTIVE'
+                    area: '3.427 m²',
+                    pollution: 'V2 Kortlagt',
+                    special: 'LOGISTICS_HUB'
                 }
             }
         };
@@ -397,321 +344,173 @@
 
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
 
-            // Lights (minimal for lineart)
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-
-            // Grid
             const grid = new THREE.GridHelper(50, 50, 0x111111, 0x222222);
             scene.add(grid);
 
-            // Build Models
-            helsingorGroup = createHelsingorModel();
-            ejbyGroup = createEjbyModel();
-            hadsundvejGroup = createHadsundvejModel();
+            helsingorGroup = buildHelsingor();
+            ejbyGroup = buildEjby();
+            hadsundvejGroup = buildHadsundvej();
 
             scene.add(helsingorGroup);
-            
-            ejbyGroup.visible = false;
             scene.add(ejbyGroup);
-
-            hadsundvejGroup.visible = false;
             scene.add(hadsundvejGroup);
 
-            updateUI();
-            updateLayerVisibility();
-
-            window.addEventListener('resize', onWindowResize, false);
+            switchSubject('helsingor');
+            window.addEventListener('resize', onWindowResize);
         }
 
-        function createTruck() {
+        function createLayerGroup(name) {
             const group = new THREE.Group();
-            const mat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.6 });
-            
-            // Cabin
-            const cabin = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 2, 2)), mat);
-            cabin.position.set(0, 1, 3);
-            group.add(cabin);
-            
-            // Trailer
-            const trailer = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 2.5, 6)), mat);
-            trailer.position.set(0, 1.25, -1.5);
-            group.add(trailer);
-            
-            // Wheels
-            const wheelGeom = new THREE.EdgesGeometry(new THREE.CylinderGeometry(0.4, 0.4, 0.5, 8));
-            const wheelPos = [[1, 0.4, 3], [-1, 0.4, 3], [1, 0.4, 0], [-1, 0.4, 0], [1, 0.4, -3], [-1, 0.4, -3]];
-            wheelPos.forEach(p => {
-                const wheel = new THREE.LineSegments(wheelGeom, mat);
-                wheel.position.set(...p);
-                wheel.rotation.z = Math.PI / 2;
-                group.add(wheel);
-            });
-            
+            group.name = name;
             return group;
         }
 
-        function createHelsingorModel() {
+        function buildHelsingor() {
             const group = new THREE.Group();
-            
-            const archGroup = new THREE.Group(); archGroup.name = 'architecture';
-            const subGroup = new THREE.Group(); subGroup.name = 'substructure';
-            const hazardGroup = new THREE.Group(); hazardGroup.name = 'hazard';
-            const safetyGroup = new THREE.Group(); safetyGroup.name = 'safety';
-            const energyGroup = new THREE.Group(); energyGroup.name = 'energy';
-            
-            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
-            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 });
-            const fireMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.6 });
+            const arch = createLayerGroup('architecture');
+            const sub = createLayerGroup('substructure');
+            const energy = createLayerGroup('energy');
 
-            // ... (rest of architecture code)
-            const mainLine = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10, 5, 16)), cyanMat);
-            archGroup.add(mainLine);
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.3 });
 
-            // Safety: Fire Exit Indicators
-            const exit1 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(0.5, 1, 0.1)), fireMat);
-            exit1.position.set(0, -1, 8.1);
-            safetyGroup.add(exit1);
+            // Main Building
+            const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10, 5, 16)), cyanMat);
+            arch.add(box);
 
-            // Hazard: Underground Vibration Zone (Trains)
-            const hazard = new THREE.Mesh(new THREE.PlaneGeometry(30, 10), new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.1, side: THREE.DoubleSide }));
-            hazard.rotation.x = -Math.PI / 2;
-            hazard.position.set(-15, -2.6, 0);
-            hazard.name = "hazard_zone";
-            hazardGroup.add(hazard);
-
-            // ... (rest of substructure/energy code)
-            const pileGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -8, 0)]);
-            for (let x = -4.5; x <= 4.5; x += 2) {
-                for (let z = -7.5; z <= 7.5; z += 3) {
-                    subGroup.add(new THREE.LineSegments(pileGeom, pinkMat)).position.set(x, -2.5, z);
+            // Towers
+            for (let x of [-4, 4]) {
+                for (let z of [-7, 7]) {
+                    const tower = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 8, 2)), cyanMat);
+                    tower.position.set(x, 1.5, z);
+                    arch.add(tower);
                 }
             }
 
-            const particles = new THREE.Group(); particles.name = 'particles';
-            for (let i = 0; i < 20; i++) {
-                const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({ color: 0x00ffcc }));
-                dot.position.set(-8, -2.5, (Math.random() - 0.5) * 30);
-                dot.userData.speed = 0.05 + Math.random() * 0.1;
-                particles.add(dot);
+            // Piles
+            const pileGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(0.2, 8, 0.2));
+            for (let x = -4; x <= 4; x += 2) {
+                for (let z = -7; z <= 7; z += 2) {
+                    const pile = new THREE.LineSegments(pileGeom, pinkMat);
+                    pile.position.set(x, -5, z);
+                    sub.add(pile);
+                }
             }
-            energyGroup.add(particles);
 
-            group.add(archGroup, subGroup, hazardGroup, safetyGroup, energyGroup);
+            group.add(arch, sub, createLayerGroup('hazard'), createLayerGroup('safety'), energy);
             return group;
         }
 
-        function createEjbyModel() {
+        function buildEjby() {
             const group = new THREE.Group();
-            const archGroup = new THREE.Group(); archGroup.name = 'architecture';
-            const subGroup = new THREE.Group(); subGroup.name = 'substructure';
-            const hazardGroup = new THREE.Group(); hazardGroup.name = 'hazard';
-            const safetyGroup = new THREE.Group(); safetyGroup.name = 'safety';
-            const energyGroup = new THREE.Group(); energyGroup.name = 'energy';
+            const arch = createLayerGroup('architecture');
+            const sub = createLayerGroup('substructure');
 
-            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
-            const bunkerMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.7 });
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.2 });
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366 });
 
-            // Hazard: Radiation Shielding Areas
-            const radZone = new THREE.Mesh(new THREE.BoxGeometry(10, 8, 10), new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.05 }));
-            radZone.position.set(0, -5, 0);
-            radZone.name = "hazard_zone";
-            hazardGroup.add(radZone);
+            // Volden
+            const vold = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(20, 2, 25)), cyanMat);
+            arch.add(vold);
 
-            // Safety: Gas-Safe Doors
-            const doorGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 2, 0.2));
-            const door = new THREE.LineSegments(doorGeom, new THREE.LineBasicMaterial({ color: 0xff3366 }));
-            door.position.set(-10, -3.5, 3.5);
-            safetyGroup.add(door);
+            // Bunker Levels
+            const l1 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10, 3, 15)), pinkMat);
+            l1.position.y = -4;
+            sub.add(l1);
 
-            // ... (rest of arch/sub/energy)
-            const createVoldProfile = (zPos) => {
-                const points = [new THREE.Vector3(-20, 0, zPos), new THREE.Vector3(-15, 0, zPos), new THREE.Vector3(-10, 5, zPos), new THREE.Vector3(-5, 5, zPos), new THREE.Vector3(0, 0, zPos), new THREE.Vector3(5, -2, zPos), new THREE.Vector3(10, 0, zPos), new THREE.Vector3(20, 0, zPos)];
-                archGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15 })));
-            };
-            for (let z = -15; z <= 15; z += 5) createVoldProfile(z);
+            const l2 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(12, 3, 18)), pinkMat);
+            l2.position.y = -8;
+            sub.add(l2);
 
-            const opsRoom = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(8, 6, 8)), bunkerMat);
-            opsRoom.position.set(0, -5, 0);
-            subGroup.add(opsRoom);
-
-            const particles = new THREE.Group(); particles.name = 'particles';
-            for (let i = 0; i < 15; i++) {
-                const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({ color: 0xff3366 }));
-                dot.position.set(0, -5, (Math.random() - 0.5) * 8);
-                dot.userData.speed = 0.02 + Math.random() * 0.05;
-                particles.add(dot);
-            }
-            energyGroup.add(particles);
-
-            group.add(archGroup, subGroup, hazardGroup, safetyGroup, energyGroup);
+            group.add(arch, sub, createLayerGroup('hazard'), createLayerGroup('safety'), createLayerGroup('energy'));
             return group;
         }
 
-        function createHadsundvejModel() {
+        function buildHadsundvej() {
             const group = new THREE.Group();
-            const archGroup = new THREE.Group(); archGroup.name = 'architecture';
-            const subGroup = new THREE.Group(); subGroup.name = 'substructure';
-            const hazardGroup = new THREE.Group(); hazardGroup.name = 'hazard';
-            const safetyGroup = new THREE.Group(); safetyGroup.name = 'safety';
-            const energyGroup = new THREE.Group(); energyGroup.name = 'energy';
+            const arch = createLayerGroup('architecture');
+            const sub = createLayerGroup('substructure');
+            const hazard = createLayerGroup('hazard');
+            const energy = createLayerGroup('energy');
 
-            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
-            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.3 });
-            const fireMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.9 });
-            const yellowMat = new THREE.LineBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.6 });
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.4 });
 
             // Main Hall
-            const mainLine = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(20, 5, 15)), cyanMat);
-            archGroup.add(mainLine);
+            const main = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(20, 5, 15)), cyanMat);
+            arch.add(main);
 
-            // Solar Panels (Roof)
-            const solarGeom = new THREE.PlaneGeometry(16, 10);
-            const solar = new THREE.LineSegments(new THREE.EdgesGeometry(solarGeom), new THREE.LineBasicMaterial({ color: 0x00ffff }));
-            solar.rotation.x = -Math.PI / 2;
-            solar.position.set(0, 2.51, 0);
-            energyGroup.add(solar);
+            // Basement
+            const basement = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10, 3, 12)), pinkMat);
+            basement.position.set(-4, -4, 0);
+            sub.add(basement);
 
-            // Transformer (1000kVA)
-            const trans = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 2, 2)), new THREE.LineBasicMaterial({ color: 0x00ffcc }));
-            trans.position.set(-12, -1.5, -5);
-            energyGroup.add(trans);
+            // Hazard Zone
+            const haz = new THREE.Mesh(new THREE.BoxGeometry(15, 0.1, 15), new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 }));
+            haz.position.y = -2.5;
+            haz.name = "hazard_pulse";
+            hazard.add(haz);
 
-            // Heat Pump Unit (Pulsing)
-            const hp = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.5, 1.5, 1.5)), new THREE.LineBasicMaterial({ color: 0x00ffcc }));
-            hp.position.set(11, -1.75, 0);
-            hp.name = "heat_pump";
-            energyGroup.add(hp);
+            // Truck
+            const truck = new THREE.Group();
+            truck.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 2, 6)), cyanMat));
+            truck.position.set(-12, -1.5, 5);
+            energy.add(truck);
 
-            // Hazard Zone (V2 Soil Contamination)
-            const hazGeom = new THREE.PlaneGeometry(10, 10);
-            const hazMat = new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
-            const hazard = new THREE.Mesh(hazGeom, hazMat);
-            hazard.rotation.x = -Math.PI / 2;
-            hazard.position.set(0, -2.49, 0);
-            hazard.name = "hazard_zone";
-            hazardGroup.add(hazard);
-
-            // Safety: Sprinklers & EI60
-            for (let x = -8; x <= 8; x += 4) {
-                for (let z = -6; z <= 6; z += 4) {
-                    const sp = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.SphereGeometry(0.1)), fireMat);
-                    sp.position.set(x, 2.3, z);
-                    safetyGroup.add(sp);
-                }
-            }
-
-            // Logistics: Truck & Routes
-            const truck = createTruck();
-            truck.position.set(-15, -2.5, 5);
-            truck.rotation.y = Math.PI / 2;
-            energyGroup.add(truck);
-
-            // Energy Particles
-            const particles = new THREE.Group();
-            particles.name = 'particles';
-            for (let i = 0; i < 30; i++) {
-                const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
-                dot.position.set(-12 + Math.random() * 2, -1.5, -5);
-                dot.userData.target = new THREE.Vector3(0, 0, 0);
-                dot.userData.phase = Math.random() * Math.PI * 2;
-                particles.add(dot);
-            }
-            energyGroup.add(particles);
-
-            // Foundation Piles
-            const pileGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -8, 0)]);
-            for (let x = -8; x <= 8; x += 4) {
-                for (let z = -6; z <= 6; z += 4) {
-                    const pile = new THREE.LineSegments(pileGeom, pinkMat);
-                    pile.position.set(x, -2.5, z);
-                    subGroup.add(pile);
-                }
-            }
-
-            group.add(archGroup);
-            group.add(subGroup);
-            group.add(hazardGroup);
-            group.add(safetyGroup);
-            group.add(energyGroup);
+            group.add(arch, sub, hazard, createLayerGroup('safety'), energy);
             return group;
         }
 
-        function updateUI() {
-            const data = subjects[currentSubject];
-            document.getElementById('source-id').innerText = data.id;
-            
-            const content = document.getElementById('metadata-content');
-            let html = `<div class="metadata-section">
-                <span class="metadata-label">SUBJECT_IDENTIFIER</span>
-                <span class="metadata-value" style="font-size: 14px; font-weight: bold;">${data.title}</span>
-            </div>`;
-
-            for (const [key, value] of Object.entries(data.metadata)) {
-                const isSpecial = key === 'special';
-                html += `<div class="metadata-section">
-                    <span class="metadata-label">${key.toUpperCase()}</span>
-                    <span class="metadata-value ${isSpecial ? 'metadata-pink' : ''}">${value}</span>
-                </div>`;
-            }
-
-            content.innerHTML = html;
-        }
-
-        window.switchSubject = function(id) {
+        window.switchSubject = (id) => {
             currentSubject = id;
-            
-            document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.remove('active');
-                if (el.innerText.toLowerCase().replace(/\s/g, '').includes(id.toLowerCase())) el.classList.add('active');
-            });
-
             helsingorGroup.visible = (id === 'helsingor');
             ejbyGroup.visible = (id === 'ejby');
             hadsundvejGroup.visible = (id === 'hadsundvej12l');
-
-            camera.position.set(20, 15, 20);
-            controls.reset();
-
-            updateUI();
+            
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.toggle('active', el.getAttribute('onclick').includes(id));
+            });
+            
+            document.getElementById('source-id').innerText = subjects[id].id;
+            updateMetadata();
             updateLayerVisibility();
+        };
+
+        function updateMetadata() {
+            const data = subjects[currentSubject];
+            let html = `<div class="metadata-section"><span class="metadata-label">TITLE</span><span class="metadata-value">${data.title}</span></div>`;
+            for (const [k, v] of Object.entries(data.metadata)) {
+                html += `<div class="metadata-section"><span class="metadata-label">${k.toUpperCase()}</span><span class="metadata-value ${k==='special'?'metadata-pink':''}">${v}</span></div>`;
+            }
+            document.getElementById('metadata-content').innerHTML = html;
         }
 
-        window.toggleXray = function() {
+        window.toggleLayer = (layer, el) => {
+            layers[layer] = !layers[layer];
+            el.classList.toggle('active');
+            updateLayerVisibility();
+        };
+
+        window.toggleXray = () => {
             xrayEnabled = !xrayEnabled;
             const btn = document.getElementById('xray-toggle');
             btn.innerText = `X-Ray Mode: ${xrayEnabled ? 'ON' : 'OFF'}`;
             btn.classList.toggle('active');
             
-            // X-ray in this version toggles all non-architecture layers at once
             Object.keys(layers).forEach(k => {
-                if (k !== 'architecture') layers[k] = xrayEnabled;
+                if (k !== 'architecture') {
+                    layers[k] = xrayEnabled;
+                    document.querySelector(`[onclick*="'${k}'"]`).classList.toggle('active', xrayEnabled);
+                }
             });
-            
             updateLayerVisibility();
-            
-            // Update UI checkboxes
-            document.querySelectorAll('.layer-item').forEach(item => {
-                const layer = item.getAttribute('onclick').match(/'([^']+)'/)[1];
-                if (layers[layer]) item.classList.add('active');
-                else item.classList.remove('active');
-            });
-        }
-
-        window.toggleLayer = function(layer, el) {
-            layers[layer] = !layers[layer];
-            el.classList.toggle('active');
-            updateLayerVisibility();
-        }
+        };
 
         function updateLayerVisibility() {
-            [helsingorGroup, ejbyGroup, hadsundvejGroup].forEach(group => {
-                group.children.forEach(child => {
-                    if (layers[child.name] !== undefined) {
-                        child.visible = layers[child.name];
-                    }
+            [helsingorGroup, ejbyGroup, hadsundvejGroup].forEach(g => {
+                g.children.forEach(l => {
+                    if (layers[l.name] !== undefined) l.visible = layers[l.name];
                 });
             });
         }
@@ -722,68 +521,25 @@
             renderer.setSize(window.innerWidth - 300, window.innerHeight);
         }
 
-        let frame = 0;
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
-            frame++;
-            
             const time = Date.now() * 0.001;
 
-            // Rotate Active Group
-            const activeGroup = currentSubject === 'helsingor' ? helsingorGroup : (currentSubject === 'ejby' ? ejbyGroup : hadsundvejGroup);
-            if (activeGroup) activeGroup.rotation.y += 0.001;
-
-            // Live Scanner Text Effect
-            if (frame % 20 === 0) {
-                const hex = Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase().padStart(8, '0');
-                const scanner = document.getElementById('scanner-text');
-                if (scanner) scanner.innerText = `${hex.substring(0,2)}:${hex.substring(2,4)}:${hex.substring(4,6)}:${hex.substring(6,8)}`;
+            if (helsingorGroup.visible) helsingorGroup.rotation.y += 0.001;
+            if (ejbyGroup.visible) ejbyGroup.rotation.y += 0.001;
+            if (hadsundvejGroup.visible) {
+                hadsundvejGroup.rotation.y += 0.001;
+                const hp = hadsundvejGroup.getObjectByName('hazard_pulse');
+                if (hp) hp.material.opacity = 0.1 + Math.sin(time * 3) * 0.1;
             }
 
-            // Animate Particles
-            [helsingorGroup, ejbyGroup, hadsundvejGroup].forEach(group => {
-                const energy = group.getObjectByName('energy');
-                if (energy && energy.visible) {
-                    const particles = energy.getObjectByName('particles');
-                    if (particles) {
-                        particles.children.forEach((p, i) => {
-                            if (currentSubject === 'helsingor') {
-                                p.position.z += p.userData.speed;
-                                if (p.position.z > 15) p.position.z = -15;
-                            } else if (currentSubject === 'ejby') {
-                                p.position.z += p.userData.speed;
-                                if (p.position.z > 4) p.position.z = -4;
-                            } else if (currentSubject === 'hadsundvej12l') {
-                                // Flow from transformer to building
-                                const t = (time + i) % 5 / 5;
-                                p.position.lerpVectors(new THREE.Vector3(-12, -1.5, -5), new THREE.Vector3(0, 0, 0), t);
-                                p.scale.setScalar(0.5 + Math.sin(time * 5 + i) * 0.5);
-                            }
-                        });
-                    }
+            if (Math.random() > 0.9) {
+                document.getElementById('scanner-text').innerText = Math.random().toString(16).substr(2, 8).toUpperCase().match(/.{2}/g).join(':');
+            }
 
-                    // Heat Pump Pulse
-                    const hp = energy.getObjectByName('heat_pump');
-                    if (hp) {
-                        const s = 1 + Math.sin(time * 3) * 0.1;
-                        hp.scale.set(s, s, s);
-                    }
-                }
-
-                // Hazard Pulse
-                const hazard = group.getObjectByName('hazard');
-                if (hazard && hazard.visible) {
-                    const zone = hazard.getObjectByName('hazard_zone');
-                    if (zone) {
-                        zone.material.opacity = 0.1 + Math.sin(time * 2) * 0.1;
-                    }
-                }
-            });
-            
             renderer.render(scene, camera);
         }
-
     </script>
 </body>
 </html>
