@@ -310,12 +310,37 @@
             const group = new THREE.Group();
             const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
             const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 });
+            const platformMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.4 });
 
             // Main Building
             const mainGeom = new THREE.BoxGeometry(10, 5, 16);
             const mainEdges = new THREE.EdgesGeometry(mainGeom);
             const mainLine = new THREE.LineSegments(mainEdges, cyanMat);
             group.add(mainLine);
+
+            // Gables (Svungne Renæssancegavle)
+            const createGable = (zPos) => {
+                const points = [];
+                for (let x = -5; x <= 5; x += 0.5) {
+                    const y = 2.5 + Math.cos(x * 0.6) * 2 + (5 - Math.abs(x)) * 0.2;
+                    points.push(new THREE.Vector3(x, y, zPos));
+                }
+                const gableGeom = new THREE.BufferGeometry().setFromPoints(points);
+                const gableLine = new THREE.Line(gableGeom, cyanMat);
+                group.add(gableLine);
+                
+                // Vertical lines for detail
+                for (let x = -4; x <= 4; x += 2) {
+                    const y = 2.5 + Math.cos(x * 0.6) * 2 + (5 - Math.abs(x)) * 0.2;
+                    const vLineGeom = new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(x, 2.5, zPos),
+                        new THREE.Vector3(x, y, zPos)
+                    ]);
+                    group.add(new THREE.LineSegments(vLineGeom, cyanMat));
+                }
+            };
+            createGable(8);
+            createGable(-8);
 
             // Towers
             const towerGeom = new THREE.BoxGeometry(2.5, 8, 2.5);
@@ -325,33 +350,75 @@
                 const tower = new THREE.LineSegments(towerEdges, cyanMat);
                 tower.position.set(...p);
                 group.add(tower);
+
+                // Detailed Copper Spires
+                const baseGeom = new THREE.CylinderGeometry(1.2, 1.5, 1, 4);
+                const baseEdges = new THREE.EdgesGeometry(baseGeom);
+                const base = new THREE.LineSegments(baseEdges, cyanMat);
+                base.position.set(p[0], 6, p[2]);
+                base.rotation.y = Math.PI / 4;
+                group.add(base);
+
+                const spireGeom = new THREE.ConeGeometry(1.2, 4, 4);
+                const spireEdges = new THREE.EdgesGeometry(spireGeom);
+                const spire = new THREE.LineSegments(spireEdges, cyanMat);
+                spire.position.set(p[0], 8.5, p[2]);
+                spire.rotation.y = Math.PI / 4;
+                group.add(spire);
+
+                // Small tip
+                const tipGeom = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
+                const tip = new THREE.LineSegments(new THREE.EdgesGeometry(tipGeom), cyanMat);
+                tip.position.set(p[0], 10.5, p[2]);
+                group.add(tip);
             });
 
-            // Roofs
-            const roofGeom = new THREE.ConeGeometry(1.8, 3, 4);
-            const roofEdges = new THREE.EdgesGeometry(roofGeom);
-            towerPos.forEach(p => {
-                const roof = new THREE.LineSegments(roofEdges, cyanMat);
-                roof.rotation.y = Math.PI / 4;
-                roof.position.set(p[0], 7, p[2]);
-                group.add(roof);
-            });
+            // Platform Roofs (Perrontage)
+            const platGeom = new THREE.BoxGeometry(12, 0.2, 30);
+            const platEdges = new THREE.EdgesGeometry(platGeom);
+            const platform1 = new THREE.LineSegments(platEdges, platformMat);
+            platform1.position.set(-12, 1, 0);
+            group.add(platform1);
+
+            // Platform pillars
+            for (let z = -14; z <= 14; z += 4) {
+                const pillarGeom = new THREE.CylinderGeometry(0.1, 0.1, 3.5, 8);
+                const pillar = new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), platformMat);
+                pillar.position.set(-12, -0.75, z);
+                group.add(pillar);
+            }
 
             // X-Ray Elements (Pink)
             const xrayGroup = new THREE.Group();
             xrayGroup.name = "xray";
 
-            // Royal Waiting Room
+            // Royal Waiting Room (Detailed)
             const roomGeom = new THREE.BoxGeometry(3, 2.5, 4);
             const roomEdges = new THREE.EdgesGeometry(roomGeom);
-            const room = new THREE.LineSegments(roomEdges, new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.6 }));
+            const room = new THREE.LineSegments(roomEdges, new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.8 }));
             room.position.set(2.5, -0.5, 4);
             xrayGroup.add(room);
 
-            // Foundation Piles
+            // Internal walls
+            const wallGeom = new THREE.PlaneGeometry(3, 2.5);
+            const wall1 = new THREE.LineSegments(new THREE.EdgesGeometry(wallGeom), new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.4 }));
+            wall1.position.set(2.5, -0.5, 3);
+            xrayGroup.add(wall1);
+
+            // Foundation Piles (Following footprint)
             const pileGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -8, 0)]);
-            for (let x = -4.5; x <= 4.5; x += 0.8) {
-                for (let z = -7.5; z <= 7.5; z += 0.8) {
+            
+            // Main building piles
+            for (let x = -4.5; x <= 4.5; x += 1.2) {
+                for (let z = -7.5; z <= 7.5; z += 1.2) {
+                    const pile = new THREE.LineSegments(pileGeom, pinkMat);
+                    pile.position.set(x, -2.5, z);
+                    xrayGroup.add(pile);
+                }
+            }
+            // Platform area piles
+            for (let x = -17; x <= -7; x += 2) {
+                for (let z = -14; z <= 14; z += 4) {
                     const pile = new THREE.LineSegments(pileGeom, pinkMat);
                     pile.position.set(x, -2.5, z);
                     xrayGroup.add(pile);
@@ -366,14 +433,38 @@
             const group = new THREE.Group();
             const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
             const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 });
+            const voldMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15 });
 
-            // Surface (Volden)
-            const voldGeom = new THREE.BoxGeometry(25, 2, 30);
-            const voldEdges = new THREE.EdgesGeometry(voldGeom);
-            const vold = new THREE.LineSegments(voldEdges, new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15 }));
-            group.add(vold);
+            // Surface (Vestvold Profile - Rampart and Moat)
+            const createVoldProfile = (zPos) => {
+                const points = [
+                    new THREE.Vector3(-20, 0, zPos),
+                    new THREE.Vector3(-15, 0, zPos),
+                    new THREE.Vector3(-10, 5, zPos), // Rampart top
+                    new THREE.Vector3(-5, 5, zPos),
+                    new THREE.Vector3(0, 0, zPos),   // Moat start
+                    new THREE.Vector3(5, -2, zPos),  // Moat bottom
+                    new THREE.Vector3(10, 0, zPos),
+                    new THREE.Vector3(20, 0, zPos)
+                ];
+                const geom = new THREE.BufferGeometry().setFromPoints(points);
+                group.add(new THREE.Line(geom, voldMat));
+            };
+            for (let z = -15; z <= 15; z += 5) createVoldProfile(z);
+            
+            // Connecting lines for the vold
+            const voldLongPoints = [
+                [-10, 5], [-5, 5], [5, -2]
+            ];
+            voldLongPoints.forEach(p => {
+                const geom = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(p[0], p[1], -15),
+                    new THREE.Vector3(p[0], p[1], 15)
+                ]);
+                group.add(new THREE.Line(geom, voldMat));
+            });
 
-            // Towers
+            // Communication Towers
             const towerGeom = new THREE.BoxGeometry(0.5, 12, 0.5);
             const towerEdges = new THREE.EdgesGeometry(towerGeom);
             const towerPos = [[-8, 6, -10], [8, 6, -10], [0, 8, 12]];
@@ -383,32 +474,61 @@
                 group.add(tower);
             });
 
-            // X-Ray Elements (Bunker Levels)
+            // X-Ray Elements (Bunker Infrastructure)
             const xrayGroup = new THREE.Group();
             xrayGroup.name = "xray";
-
             const bunkerMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.7 });
 
-            // Level 1
-            const l1Geom = new THREE.BoxGeometry(10, 3, 15);
-            const l1Edges = new THREE.EdgesGeometry(l1Geom);
-            const level1 = new THREE.LineSegments(l1Edges, bunkerMat);
-            level1.position.y = -3.5;
-            xrayGroup.add(level1);
+            // Operations Room (Double Height)
+            const opsGeom = new THREE.BoxGeometry(8, 6, 8);
+            const opsEdges = new THREE.EdgesGeometry(opsGeom);
+            const opsRoom = new THREE.LineSegments(opsEdges, bunkerMat);
+            opsRoom.position.set(0, -5, 0);
+            xrayGroup.add(opsRoom);
 
-            // Level 2
-            const l2Geom = new THREE.BoxGeometry(12, 3, 18);
-            const l2Edges = new THREE.EdgesGeometry(l2Geom);
-            const level2 = new THREE.LineSegments(l2Edges, bunkerMat);
-            level2.position.y = -7.5;
+            // Gallery inside Operations Room
+            const galleryGeom = new THREE.BoxGeometry(7.8, 0.1, 7.8);
+            const gallery = new THREE.LineSegments(new THREE.EdgesGeometry(galleryGeom), bunkerMat);
+            gallery.position.set(0, -3.5, 0);
+            xrayGroup.add(gallery);
+
+            // Engine Room (Diesel Generators)
+            const engineGeom = new THREE.BoxGeometry(4, 3, 5);
+            const engineEdges = new THREE.EdgesGeometry(engineGeom);
+            const engineRoom = new THREE.LineSegments(engineEdges, bunkerMat);
+            engineRoom.position.set(-8, -7.5, -5);
+            xrayGroup.add(engineRoom);
+            
+            // Generators
+            for (let z = -6.5; z <= -3.5; z += 1.5) {
+                const genGeom = new THREE.BoxGeometry(1, 1, 0.8);
+                const gen = new THREE.LineSegments(new THREE.EdgesGeometry(genGeom), bunkerMat);
+                gen.position.set(-8, -8, z);
+                xrayGroup.add(gen);
+            }
+
+            // Entry Tunnel ('Atombeskyttet')
+            const tunnelGeom = new THREE.BoxGeometry(15, 2, 2);
+            const tunnelEdges = new THREE.EdgesGeometry(tunnelGeom);
+            const tunnel = new THREE.LineSegments(tunnelEdges, bunkerMat);
+            tunnel.position.set(-15, -3.5, 5);
+            tunnel.rotation.y = -0.3;
+            xrayGroup.add(tunnel);
+
+            // Ventilation Shafts
+            const ventPos = [[4, 0, 4], [-4, 0, -4], [6, 0, -8]];
+            ventPos.forEach(p => {
+                const vGeom = new THREE.BoxGeometry(0.8, 10, 0.8);
+                const vent = new THREE.LineSegments(new THREE.EdgesGeometry(vGeom), bunkerMat);
+                vent.position.set(p[0], -5, p[2]);
+                xrayGroup.add(vent);
+            });
+
+            // General Levels
+            const l2Geom = new THREE.BoxGeometry(18, 3, 22);
+            const level2 = new THREE.LineSegments(new THREE.EdgesGeometry(l2Geom), bunkerMat);
+            level2.position.y = -8.5;
             xrayGroup.add(level2);
-
-            // Shaft
-            const shaftGeom = new THREE.BoxGeometry(2, 4, 2);
-            const shaftEdges = new THREE.EdgesGeometry(shaftGeom);
-            const shaft = new THREE.LineSegments(shaftEdges, bunkerMat);
-            shaft.position.set(0, -5.5, 0);
-            xrayGroup.add(shaft);
 
             group.add(xrayGroup);
             return group;
