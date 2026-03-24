@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>By-Research | Digital Architect Dashboard</title>
+    <style>
+        :root {
+            --neon-cyan: #00ffcc;
+            --neon-pink: #ff3366;
+            --bg-black: #050505;
+            --sidebar-width: 300px;
+            --glass-bg: rgba(0, 255, 204, 0.05);
+            --border-color: rgba(0, 255, 204, 0.2);
+        }
+
+        body { 
+            margin: 0; 
+            background: var(--bg-black); 
+            color: var(--neon-cyan); 
+            font-family: 'Courier New', Courier, monospace; 
+            overflow: hidden; 
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        #sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #sidebar-header h1 {
+            font-size: 18px;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.05);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        .nav-item:hover {
+            background: var(--glass-bg);
+            padding-left: 30px;
+        }
+
+        .nav-item.active {
+            background: rgba(0, 255, 204, 0.1);
+            border-left: 4px solid var(--neon-cyan);
+            color: #fff;
+        }
+
+        #metadata-panel {
+            flex-grow: 1;
+            padding: 20px;
+            font-size: 11px;
+            overflow-y: auto;
+            border-top: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .metadata-section {
+            margin-bottom: 20px;
+        }
+
+        .metadata-label {
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .metadata-value {
+            color: var(--neon-cyan);
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .metadata-pink {
+            color: var(--neon-pink);
+            text-shadow: 0 0 5px var(--neon-pink);
+        }
+
+        /* Main Content Styling */
+        #main-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #ui-overlay { 
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+
+        #top-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 20px;
+            pointer-events: auto;
+        }
+
+        .toggle-btn {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--neon-pink);
+            color: var(--neon-pink);
+            padding: 8px 15px;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: var(--neon-pink);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+        #status-bar { 
+            position: absolute; 
+            bottom: 20px; left: 20px; 
+            font-size: 11px; 
+            background: rgba(0, 255, 204, 0.1); 
+            padding: 5px 10px; 
+            border-left: 3px solid var(--neon-cyan);
+            pointer-events: none;
+        }
+
+        #controls-hint { 
+            position: absolute; 
+            bottom: 20px; 
+            right: 20px; 
+            color: #444; 
+            font-size: 10px; 
+            pointer-events: none;
+        }
+
+        /* Scanline effect */
+        #ui-overlay::before {
+            content: " ";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(0, 255, 204, 0.05);
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        canvas { display: block; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan); }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div id="sidebar-header">
+            <h1>By-Research</h1>
+            <div style="font-size: 9px; color: #666; margin-top: 5px;">ARCHITECTURAL_INTELLIGENCE_v1.0</div>
+        </div>
+        
+        <div id="nav-list">
+            <div class="nav-item active" onclick="switchSubject('helsingor')">Helsingør Station</div>
+            <div class="nav-item" onclick="switchSubject('ejby')">Ejbybunkeren</div>
+        </div>
+
+        <div id="metadata-panel">
+            <div id="metadata-content">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+    </div>
+
+    <div id="main-container">
+        <div id="ui-overlay">
+            <div id="top-bar">
+                <button id="xray-toggle" class="toggle-btn" onclick="toggleXray()">X-Ray Mode: OFF</button>
+            </div>
+
+            <div id="status-bar">
+                SYSTEM_READY // SOURCE: <span id="source-id">HELSINGØR_STATION</span> // INTEGRITY: 99.8%
+            </div>
+
+            <div id="controls-hint">ROT: L_MOUSE | ZOOM: SCROLL | PAN: R_MOUSE</div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls;
+        let helsingorGroup, ejbyGroup;
+        let xrayEnabled = false;
+        let currentSubject = 'helsingor';
+
+        const subjects = {
+            helsingor: {
+                id: 'HELSINGØR_STATION',
+                title: 'Stationspladsen 3',
+                metadata: {
+                    by: 'Helsingør',
+                    cvr: 'DATA_UNAVAILABLE',
+                    aarstal: '1891',
+                    arkitekt: 'Holsøe & Wenck',
+                    stilart: 'Nederlandsk Renæssance',
+                    dybde: '-6.0m',
+                    fundament: '1.600 træpæle',
+                    status: 'Fredet (1990)',
+                    special: 'KONGELIG_VENTESAL_DETECTED'
+                }
+            },
+            ejby: {
+                id: 'EJBYBUNKEREN',
+                title: 'Vestvolden Rødovre',
+                metadata: {
+                    by: 'København',
+                    cvr: 'DATA_UNAVAILABLE',
+                    type: 'Kommandobunker',
+                    periode: '1952-1954',
+                    dybde: '-12.0m',
+                    materiale: 'Armeret Beton',
+                    status: 'Museum / Kold Krig',
+                    special: 'RADIATION_SHIELDING_ACTIVE'
+                }
+            }
+        };
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+
+            camera = new THREE.PerspectiveCamera(75, (window.innerWidth - 300) / window.innerHeight, 0.1, 1000);
+            camera.position.set(20, 15, 20);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth - 300, window.innerHeight);
+            document.getElementById('main-container').appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Lights (minimal for lineart)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            // Grid
+            const grid = new THREE.GridHelper(50, 50, 0x111111, 0x222222);
+            scene.add(grid);
+
+            // Build Models
+            helsingorGroup = createHelsingorModel();
+            ejbyGroup = createEjbyModel();
+
+            scene.add(helsingorGroup);
+            // ejbyGroup is added but hidden initially
+            ejbyGroup.visible = false;
+            scene.add(ejbyGroup);
+
+            updateUI();
+
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function createHelsingorModel() {
+            const group = new THREE.Group();
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 });
+
+            // Main Building
+            const mainGeom = new THREE.BoxGeometry(10, 5, 16);
+            const mainEdges = new THREE.EdgesGeometry(mainGeom);
+            const mainLine = new THREE.LineSegments(mainEdges, cyanMat);
+            group.add(mainLine);
+
+            // Towers
+            const towerGeom = new THREE.BoxGeometry(2.5, 8, 2.5);
+            const towerEdges = new THREE.EdgesGeometry(towerGeom);
+            const towerPos = [[-3.75, 1.5, -6.75], [3.75, 1.5, -6.75], [-3.75, 1.5, 6.75], [3.75, 1.5, 6.75]];
+            towerPos.forEach(p => {
+                const tower = new THREE.LineSegments(towerEdges, cyanMat);
+                tower.position.set(...p);
+                group.add(tower);
+            });
+
+            // Roofs
+            const roofGeom = new THREE.ConeGeometry(1.8, 3, 4);
+            const roofEdges = new THREE.EdgesGeometry(roofGeom);
+            towerPos.forEach(p => {
+                const roof = new THREE.LineSegments(roofEdges, cyanMat);
+                roof.rotation.y = Math.PI / 4;
+                roof.position.set(p[0], 7, p[2]);
+                group.add(roof);
+            });
+
+            // X-Ray Elements (Pink)
+            const xrayGroup = new THREE.Group();
+            xrayGroup.name = "xray";
+
+            // Royal Waiting Room
+            const roomGeom = new THREE.BoxGeometry(3, 2.5, 4);
+            const roomEdges = new THREE.EdgesGeometry(roomGeom);
+            const room = new THREE.LineSegments(roomEdges, new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.6 }));
+            room.position.set(2.5, -0.5, 4);
+            xrayGroup.add(room);
+
+            // Foundation Piles
+            const pileGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -8, 0)]);
+            for (let x = -4.5; x <= 4.5; x += 0.8) {
+                for (let z = -7.5; z <= 7.5; z += 0.8) {
+                    const pile = new THREE.LineSegments(pileGeom, pinkMat);
+                    pile.position.set(x, -2.5, z);
+                    xrayGroup.add(pile);
+                }
+            }
+            
+            group.add(xrayGroup);
+            return group;
+        }
+
+        function createEjbyModel() {
+            const group = new THREE.Group();
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 });
+
+            // Surface (Volden)
+            const voldGeom = new THREE.BoxGeometry(25, 2, 30);
+            const voldEdges = new THREE.EdgesGeometry(voldGeom);
+            const vold = new THREE.LineSegments(voldEdges, new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15 }));
+            group.add(vold);
+
+            // Towers
+            const towerGeom = new THREE.BoxGeometry(0.5, 12, 0.5);
+            const towerEdges = new THREE.EdgesGeometry(towerGeom);
+            const towerPos = [[-8, 6, -10], [8, 6, -10], [0, 8, 12]];
+            towerPos.forEach(p => {
+                const tower = new THREE.LineSegments(towerEdges, cyanMat);
+                tower.position.set(...p);
+                group.add(tower);
+            });
+
+            // X-Ray Elements (Bunker Levels)
+            const xrayGroup = new THREE.Group();
+            xrayGroup.name = "xray";
+
+            const bunkerMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.7 });
+
+            // Level 1
+            const l1Geom = new THREE.BoxGeometry(10, 3, 15);
+            const l1Edges = new THREE.EdgesGeometry(l1Geom);
+            const level1 = new THREE.LineSegments(l1Edges, bunkerMat);
+            level1.position.y = -3.5;
+            xrayGroup.add(level1);
+
+            // Level 2
+            const l2Geom = new THREE.BoxGeometry(12, 3, 18);
+            const l2Edges = new THREE.EdgesGeometry(l2Geom);
+            const level2 = new THREE.LineSegments(l2Edges, bunkerMat);
+            level2.position.y = -7.5;
+            xrayGroup.add(level2);
+
+            // Shaft
+            const shaftGeom = new THREE.BoxGeometry(2, 4, 2);
+            const shaftEdges = new THREE.EdgesGeometry(shaftGeom);
+            const shaft = new THREE.LineSegments(shaftEdges, bunkerMat);
+            shaft.position.set(0, -5.5, 0);
+            xrayGroup.add(shaft);
+
+            group.add(xrayGroup);
+            return group;
+        }
+
+        function updateUI() {
+            const data = subjects[currentSubject];
+            document.getElementById('source-id').innerText = data.id;
+            
+            const content = document.getElementById('metadata-content');
+            let html = `<div class="metadata-section">
+                <span class="metadata-label">SUBJECT_IDENTIFIER</span>
+                <span class="metadata-value" style="font-size: 14px; font-weight: bold;">${data.title}</span>
+            </div>`;
+
+            for (const [key, value] of Object.entries(data.metadata)) {
+                const isSpecial = key === 'special';
+                html += `<div class="metadata-section">
+                    <span class="metadata-label">${key.toUpperCase()}</span>
+                    <span class="metadata-value ${isSpecial ? 'metadata-pink' : ''}">${value}</span>
+                </div>`;
+            }
+
+            content.innerHTML = html;
+        }
+
+        window.switchSubject = function(id) {
+            currentSubject = id;
+            
+            // Update Nav
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+                if (el.innerText.toLowerCase().includes(id)) el.classList.add('active');
+            });
+
+            // Update Visibility
+            helsingorGroup.visible = (id === 'helsingor');
+            ejbyGroup.visible = (id === 'ejby');
+
+            // Reset rotation or camera if desired
+            camera.position.set(20, 15, 20);
+            controls.reset();
+
+            updateUI();
+        }
+
+        window.toggleXray = function() {
+            xrayEnabled = !xrayEnabled;
+            const btn = document.getElementById('xray-toggle');
+            btn.innerText = `X-Ray Mode: ${xrayEnabled ? 'ON' : 'OFF'}`;
+            btn.classList.toggle('active');
+
+            // Toggle visibility of pink groups
+            [helsingorGroup, ejbyGroup].forEach(group => {
+                const xray = group.getObjectByName('xray');
+                if (xray) {
+                    xray.children.forEach(child => {
+                        // Keep foundation piles subtle even when ON, but hidden when OFF
+                        // Or just toggle visibility
+                        child.visible = xrayEnabled;
+                    });
+                }
+            });
+        }
+
+        function onWindowResize() {
+            camera.aspect = (window.innerWidth - 300) / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth - 300, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            
+            if (helsingorGroup.visible) helsingorGroup.rotation.y += 0.001;
+            if (ejbyGroup.visible) ejbyGroup.rotation.y += 0.001;
+            
+            renderer.render(scene, camera);
+        }
+
+        // Initialize X-Ray state (start with OFF)
+        [helsingorGroup, ejbyGroup].forEach(group => {
+            const xray = group.getObjectByName('xray');
+            if (xray) xray.children.forEach(c => c.visible = false);
+        });
+
+    </script>
+</body>
+</html>
