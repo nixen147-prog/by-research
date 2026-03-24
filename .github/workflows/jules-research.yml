@@ -1,0 +1,32 @@
+name: Jules Research Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      location:
+        description: 'Navn på lokation (f.eks. Aarhus Hovedbanegård)'
+        required: true
+      data:
+        description: 'Research data i JSON format'
+        required: true
+        default: '{"city": "Aarhus", "year": "1927", "area": 1200, "architect": "Knut Tanggaard Seest", "style": "Nyklassicisme", "foundation_type": "Pælefundering", "depth": "-8.5m", "description": "Hovedbanegården i Aarhus er et arkitektonisk knudepunkt.", "hidden_infra_type": "Jernbanetunneller"}'
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Run Jules Researcher
+        run: |
+          python tools/jules_researcher.py "${{ github.event.inputs.location }}" '${{ github.event.inputs.data }}'
+      - name: Commit and Push
+        run: |
+          git config --global user.name "Jules (Auto-Research)"
+          git config --global user.email "jules@by-research.bot"
+          git add .
+          git commit -m "Jules: Automatiseret research af ${{ github.event.inputs.location }}"
+          git push
