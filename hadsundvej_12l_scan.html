@@ -102,8 +102,8 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x050505);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(35, 30, 35);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera.position.set(100, 80, 100);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -124,35 +124,132 @@
             // 4. Forureningszoner (Semi-transparente skyer)
             createHazardZones();
 
+            // 5. Grundvandsspejl (Blåt plan)
+            createGroundwaterLayer();
+
             scene.add(industrialGroup);
 
             // Grid
-            const grid = new THREE.GridHelper(70, 70, 0x111111, 0x222222);
+            const grid = new THREE.GridHelper(200, 50, 0x111111, 0x222222);
             scene.add(grid);
 
             window.addEventListener('resize', onWindowResize, false);
         }
 
         function createComplex() {
-            // Hovedhal
-            const mainGeom = new THREE.BoxGeometry(20, 5, 15);
+            // Hovedhal (68.5m x 50m x 6.5m)
+            const mainGeom = new THREE.BoxGeometry(68.5, 6.5, 50);
             const mainEdges = new THREE.EdgesGeometry(mainGeom);
             const main = new THREE.LineSegments(mainEdges, new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 }));
+            main.position.y = 3.25; // Placeret på terræn
             industrialGroup.add(main);
+
+            // Vinduesbånd (Kontor/Personale-sektion)
+            const winGeom = new THREE.PlaneGeometry(3, 1.5);
+            const winMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.5 });
+            for (let x = -30; x <= 30; x += 8) {
+                const win = new THREE.LineSegments(new THREE.EdgesGeometry(winGeom), winMat);
+                win.position.set(x, 4.5, 25.05);
+                industrialGroup.add(win);
+            }
+
+            // Personale-dør
+            const doorGeom = new THREE.PlaneGeometry(1.2, 2.2);
+            const door = new THREE.LineSegments(new THREE.EdgesGeometry(doorGeom), new THREE.LineBasicMaterial({ color: 0x00ffcc }));
+            door.position.set(-33, 1.1, 25.05);
+            industrialGroup.add(door);
+
+            // Indskudt dæk (Mezzanin)
+            const deckGeom = new THREE.PlaneGeometry(20, 15);
+            const deckMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.2 });
+            const mezzanine = new THREE.LineSegments(new THREE.EdgesGeometry(deckGeom), deckMat);
+            mezzanine.rotation.x = Math.PI / 2;
+            mezzanine.position.set(-24, 3.25, 17.5);
+            industrialGroup.add(mezzanine);
+
+            // Trappe til Mezzanin
+            const stairGeom = new THREE.BoxGeometry(2, 0.1, 0.4);
+            for (let i = 0; i < 18; i++) {
+                const step = new THREE.LineSegments(new THREE.EdgesGeometry(stairGeom), new THREE.LineBasicMaterial({ color: 0x00ffcc }));
+                step.position.set(-14, 0.1 + (i * 0.18), 10 + (i * 0.4));
+                industrialGroup.add(step);
+            }
+
+            // Reolsystemer (High-Density Storage Racks)
+            const rackGeom = new THREE.BoxGeometry(4, 5.5, 30);
+            const rackMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1 });
+            for (let x = -10; x <= 30; x += 10) {
+                const rack = new THREE.LineSegments(new THREE.EdgesGeometry(rackGeom), rackMat);
+                rack.position.set(x, 2.75, -5);
+                industrialGroup.add(rack);
+            }
+
+            // Læsseporte (Flytte Møller Logistics - 4.0m x 4.2m)
+            const gateGeom = new THREE.PlaneGeometry(4, 4.2);
+            const gateMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
+            for (let x = -10; x <= 30; x += 10) {
+                const gate = new THREE.LineSegments(new THREE.EdgesGeometry(gateGeom), gateMat);
+                gate.position.set(x, 2.1, 25.05);
+                industrialGroup.add(gate);
+            }
+
+            // Transformerstation (1000 kVA)
+            const transGeom = new THREE.BoxGeometry(3, 3, 3);
+            const trans = new THREE.LineSegments(new THREE.EdgesGeometry(transGeom), new THREE.LineBasicMaterial({ color: 0x00ffcc }));
+            trans.position.set(-40, 1.5, -20);
+            industrialGroup.add(trans);
+
+            // Interne Brandvægge (EI60) - Cyan planer
+            const wallMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.4 });
+            const firewall1 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(50, 6.5)), wallMat);
+            firewall1.rotation.y = Math.PI / 2;
+            firewall1.position.set(0, 3.25, 0);
+            industrialGroup.add(firewall1);
+        }
+
+        function createGroundwaterLayer() {
+            const waterGeom = new THREE.PlaneGeometry(200, 200);
+            const waterMat = new THREE.MeshBasicMaterial({ 
+                color: 0x0066ff, 
+                transparent: true, 
+                opacity: 0.05, 
+                side: THREE.DoubleSide 
+            });
+            const water = new THREE.Mesh(waterGeom, waterMat);
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = -10.5; // Grundvandsspejl på ca -10.5 meter
+            scene.add(water);
         }
 
         function createFoundation() {
             const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.3 });
-            // Kælder 12A
-            const basement = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10, 3, 12)), pinkMat);
-            basement.position.set(-4, -4, 0);
+            // Kælder 12A (17m x 24m)
+            const basement = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(17, 3, 24)), pinkMat);
+            basement.position.set(-25.75, -1.5, 13);
             industrialGroup.add(basement);
 
-            const pileGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -10, 0)]);
-            for (let x = -10; x <= 16; x += 5) {
-                for (let z = -7; z <= 7; z += 5) {
+            // Trappe til Kælder (Unit 12A)
+            const stairGeom = new THREE.BoxGeometry(2, 0.1, 0.4);
+            const stairMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.5 });
+            for (let i = 0; i < 20; i++) {
+                const step = new THREE.LineSegments(new THREE.EdgesGeometry(stairGeom), stairMat);
+                step.position.set(-34, -0.1 - (i * 0.15), 1 - (i * 0.4));
+                industrialGroup.add(step);
+            }
+
+            // Sprinkler Reservoir (120m3) - Underjordisk
+            const resGeom = new THREE.BoxGeometry(6, 4, 5);
+            const resEdges = new THREE.EdgesGeometry(resGeom);
+            const reservoir = new THREE.LineSegments(resEdges, new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.6 }));
+            reservoir.position.set(20, -2, -15);
+            industrialGroup.add(reservoir);
+
+            // De 548 pæle (Dybde -8.0m) - Representeret ved høj tæthed
+            const pileGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -8, 0)]);
+            for (let x = -34; x <= 34; x += 3) {
+                for (let z = -25; z <= 25; z += 3) {
                     const pile = new THREE.LineSegments(pileGeom, pinkMat);
-                    pile.position.set(x, -2, z);
+                    pile.position.set(x, 0, z);
                     industrialGroup.add(pile);
                 }
             }
@@ -177,16 +274,21 @@
         }
 
         function createHazardZones() {
-            // Forureningszoner (Gennemsigtige bokse der markerer forurenet jord)
-            const hazardGeom = new THREE.BoxGeometry(8, 4, 8);
-            const hazardMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.1 });
+            // Forureningsfanen (Migration mod grundvandet - Nedadgående og skråt)
+            const plumeMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.15 });
             
-            const zones = [[-5, -6, -2], [10, -6, 5]];
-            zones.forEach(p => {
-                const zone = new THREE.LineSegments(new THREE.EdgesGeometry(hazardGeom), hazardMat);
-                zone.position.set(...p);
-                industrialGroup.add(zone);
-            });
+            // Kildezone (Metalvarefabrik)
+            const sourceGeom = new THREE.BoxGeometry(6, 4, 6);
+            const source = new THREE.LineSegments(new THREE.EdgesGeometry(sourceGeom), plumeMat);
+            source.position.set(-5, -4, -2);
+            industrialGroup.add(source);
+
+            // Migrationsfane (Migration mod sydøst / HOFOR)
+            const plumeGeom = new THREE.BoxGeometry(10, 6, 12);
+            const plume = new THREE.LineSegments(new THREE.EdgesGeometry(plumeGeom), plumeMat);
+            plume.position.set(2, -8, 2);
+            plume.rotation.x = 0.2; // Indikerer nedsivning
+            industrialGroup.add(plume);
         }
 
         function onWindowResize() {

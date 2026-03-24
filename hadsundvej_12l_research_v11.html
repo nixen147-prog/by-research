@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jules Research | Hadsundvej 12L | V11 Final Scan</title>
+    <style>
+        :root {
+            --neon-cyan: #00ffcc;
+            --neon-pink: #ff3366;
+            --neon-blue: #0066ff;
+            --bg-black: #050505;
+        }
+
+        body { margin: 0; background: var(--bg-black); color: var(--neon-cyan); font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        
+        #ui-overlay { 
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none;
+            border: 1px solid rgba(0, 255, 204, 0.1);
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        #header { position: absolute; top: 20px; left: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        #header h1 { margin: 0; font-size: 22px; text-shadow: 0 0 10px var(--neon-cyan); }
+        #header p { margin: 5px 0; font-size: 12px; color: #666; }
+
+        #data-panel { 
+            position: absolute; 
+            top: 20px; right: 20px; 
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--neon-cyan);
+            padding: 15px;
+            font-size: 11px; 
+            color: var(--neon-cyan);
+            min-width: 250px;
+            pointer-events: auto;
+        }
+
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid rgba(0, 255, 204, 0.1); padding-bottom: 2px; }
+        .pink-label { color: var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink); }
+
+        #status-bar { 
+            position: absolute; 
+            bottom: 20px; left: 20px; 
+            font-size: 12px; 
+            background: rgba(255, 51, 102, 0.1); 
+            padding: 8px 15px; 
+            border-left: 4px solid var(--neon-pink);
+            color: var(--neon-pink);
+            text-transform: uppercase;
+        }
+
+        #controls-hint { position: absolute; bottom: 20px; right: 20px; color: #444; font-size: 10px; }
+
+        /* Scanline effect */
+        #ui-overlay::before {
+            content: " ";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(0, 255, 204, 0.05);
+            animation: scan 6s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="ui-overlay">
+        <div id="header">
+            <h1>Subject: Hadsundvej 12L</h1>
+            <p>LOCALITY_ID: 175-00021 | RESEARCH_V11_FINAL</p>
+        </div>
+
+        <div id="data-panel">
+            <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid var(--neon-cyan);">ENVIRONMENTAL_METRICS</div>
+            <div class="data-row"><span>POLLUTANT:</span> <span class="pink-label">TCE / CHLORINATED</span></div>
+            <div class="data-row"><span>CONCENTRATION:</span> <span class="pink-label">12.5 µg/l (BASEMENT)</span></div>
+            <div class="data-row"><span>RISK_LEVEL:</span> <span class="pink-label">V2_KORTLAGT</span></div>
+            <div class="data-row"><span>MIGRATION:</span> <span>SOUTH_EAST (HOFOR)</span></div>
+            <div class="data-row"><span>FOUNDATION:</span> <span>548_PILES (-8.0m)</span></div>
+            <div class="data-row"><span>STATUS:</span> <span style="animation: blink 1s infinite;">MONITORING_ACTIVE</span></div>
+        </div>
+
+        <div id="status-bar">
+            CRITICAL_POINT_DETECTED: TCE_VAPOR_RISK_IN_BASEMENT_12A // HOFOR_PROTECTION_ZONE_ACTIVE
+        </div>
+
+        <div id="controls-hint">ROT: MOUSE_L | ZOOM: SCROLL | PAN: MOUSE_R</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls;
+        let buildingGroup = new THREE.Group();
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera.position.set(80, 60, 100);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // Arkitektur & Infrastruktur
+            createMainStructure();
+            createMezzanine();
+            createLogistics();
+            createUnderground();
+            createHazardSystem();
+
+            scene.add(buildingGroup);
+
+            // Grid & Ground
+            const grid = new THREE.GridHelper(200, 50, 0x111111, 0x222222);
+            scene.add(grid);
+
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function createMainStructure() {
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
+            
+            // Hovedbygning (68.5m x 50m x 6.5m)
+            const geometry = new THREE.BoxGeometry(68.5, 6.5, 50);
+            const edges = new THREE.EdgesGeometry(geometry);
+            const main = new THREE.LineSegments(edges, cyanMat);
+            main.position.y = 3.25;
+            buildingGroup.add(main);
+
+            // Vinduer
+            const winGeom = new THREE.BoxGeometry(3, 1.5, 0.1);
+            for (let x = -30; x <= 30; x += 8) {
+                const win = new THREE.LineSegments(new THREE.EdgesGeometry(winGeom), cyanMat);
+                win.position.set(x, 4.5, 25);
+                buildingGroup.add(win);
+            }
+
+            // Døre
+            const doorGeom = new THREE.BoxGeometry(1.2, 2.2, 0.1);
+            const door = new THREE.LineSegments(new THREE.EdgesGeometry(doorGeom), cyanMat);
+            door.position.set(-33, 1.1, 25);
+            buildingGroup.add(door);
+
+            // Transformer (1000 kVA)
+            const trans = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(3, 3, 3)), cyanMat);
+            trans.position.set(-40, 1.5, -20);
+            buildingGroup.add(trans);
+        }
+
+        function createMezzanine() {
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.3 });
+            
+            // Mezzanin dæk
+            const deck = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(20, 15)), cyanMat);
+            deck.rotation.x = Math.PI / 2;
+            deck.position.set(-24, 3.25, 17.5);
+            buildingGroup.add(deck);
+
+            // Trappe
+            const stairStep = new THREE.BoxGeometry(2, 0.1, 0.4);
+            for (let i = 0; i < 18; i++) {
+                const step = new THREE.LineSegments(new THREE.EdgesGeometry(stairStep), cyanMat);
+                step.position.set(-14, 0.1 + (i * 0.18), 10 + (i * 0.4));
+                buildingGroup.add(step);
+            }
+        }
+
+        function createLogistics() {
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
+            
+            // Læsseporte (4.0m x 4.2m)
+            const gateGeom = new THREE.BoxGeometry(4, 4.2, 0.1);
+            for (let x = -10; x <= 30; x += 10) {
+                const gate = new THREE.LineSegments(new THREE.EdgesGeometry(gateGeom), cyanMat);
+                gate.position.set(x, 2.1, 25);
+                buildingGroup.add(gate);
+            }
+
+            // Reoler
+            const rackGeom = new THREE.BoxGeometry(4, 5.5, 30);
+            const rackMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1 });
+            for (let x = -10; x <= 30; x += 10) {
+                const rack = new THREE.LineSegments(new THREE.EdgesGeometry(rackGeom), rackMat);
+                rack.position.set(x, 2.75, -5);
+                buildingGroup.add(rack);
+            }
+        }
+
+        function createUnderground() {
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.4 });
+            const waterMat = new THREE.MeshBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.05, side: THREE.DoubleSide });
+
+            // Kælder (Unit 12A)
+            const basement = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(17, 3, 24)), pinkMat);
+            basement.position.set(-25.75, -1.5, 13);
+            buildingGroup.add(basement);
+
+            // Trappe til kælder
+            const stairStep = new THREE.BoxGeometry(2, 0.1, 0.4);
+            for (let i = 0; i < 20; i++) {
+                const step = new THREE.LineSegments(new THREE.EdgesGeometry(stairStep), pinkMat);
+                step.position.set(-34, -0.1 - (i * 0.15), 1 - (i * 0.4));
+                buildingGroup.add(step);
+            }
+
+            // Pæle (548 stk)
+            const pileGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -8, 0)]);
+            for (let x = -34; x <= 34; x += 3.5) {
+                for (let z = -25; z <= 25; z += 3.5) {
+                    const pile = new THREE.LineSegments(pileGeom, new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.1 }));
+                    pile.position.set(x, 0, z);
+                    buildingGroup.add(pile);
+                }
+            }
+
+            // Grundvandsspejl
+            const water = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), waterMat);
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = -10.5;
+            scene.add(water);
+        }
+
+        function createHazardSystem() {
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 });
+            
+            // TCE Plume (Migration mod HOFOR)
+            const plumeGeom = new THREE.BoxGeometry(20, 10, 40);
+            const plume = new THREE.LineSegments(new THREE.EdgesGeometry(plumeGeom), pinkMat);
+            plume.position.set(10, -8, 10);
+            plume.rotation.x = 0.1;
+            plume.rotation.y = 0.3; // Migration sydøst
+            buildingGroup.add(plume);
+
+            // Migration Arrow (Visuel retning)
+            const arrowHelper = new THREE.ArrowHelper(
+                new THREE.Vector3(1, -0.2, 1).normalize(), 
+                new THREE.Vector3(0, -5, 0), 
+                25, 
+                0xff3366
+            );
+            buildingGroup.add(arrowHelper);
+
+            // Sprinkler Reservoir
+            const reservoir = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(6, 4, 5)), pinkMat);
+            reservoir.position.set(20, -2, -15);
+            buildingGroup.add(reservoir);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            buildingGroup.rotation.y += 0.0002;
+            renderer.render(scene, camera);
+        }
+    </script>
+    <style>
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+    </style>
+</body>
+</html>

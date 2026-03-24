@@ -11,10 +11,14 @@
             "id": "dc51226b6cc955cf",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "Arkitektur/Stationspladsen_3.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Stationspladsen_3"
             }
           }
         ]
@@ -74,8 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "d7489c1466f1fef6",
@@ -179,9 +182,11 @@
   },
   "active": "dc51226b6cc955cf",
   "lastOpenFiles": [
-    "Arkitektur/Stationspladsen_3.md",
-    "Arkitektur/Hadsundvej_12L.md",
+    "Byer/Helsingør.md",
+    "Byer/Svendborg.md",
     "Arkitektur/Frederiksø_18F.md",
+    "Arkitektur/Hadsundvej_12L.md",
+    "Arkitektur/Stationspladsen_3.md",
     "Templates/Design_Guidelines.md",
     "hadsundvej_12l_scan.html",
     "Templates/Infrastruktur.md",
@@ -189,7 +194,6 @@
     "Start_Her.md",
     "Infrastruktur/Ejbybunkeren.md",
     "index.html",
-    "3d_visualizer.html",
-    "Byer/Helsingør.md"
+    "3d_visualizer.html"
   ]
 }
