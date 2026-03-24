@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Templates/Infrastruktur.md",
+                "file": "Arkitektur/Hadsundvej_12L.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Infrastruktur"
+              "title": "Hadsundvej_12L"
             }
           }
         ]
@@ -78,7 +78,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "d7489c1466f1fef6",
@@ -182,6 +183,8 @@
   },
   "active": "dc51226b6cc955cf",
   "lastOpenFiles": [
+    "hadsundvej_12l_scan.html",
+    "Templates/Infrastruktur.md",
     "Templates/Design_Guidelines.md",
     "Templates/By.md",
     "Start_Her.md",
@@ -189,7 +192,6 @@
     "index.html",
     "Arkitektur/Stationspladsen_3.md",
     "3d_visualizer.html",
-    "Templates/Infrastruktur.md",
     "Byer/Helsingør.md"
   ]
 }

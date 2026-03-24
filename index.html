@@ -193,6 +193,7 @@
         <div id="nav-list">
             <div class="nav-item active" onclick="switchSubject('helsingor')">Helsingør Station</div>
             <div class="nav-item" onclick="switchSubject('ejby')">Ejbybunkeren</div>
+            <div class="nav-item" onclick="switchSubject('hadsundvej12l')">Hadsundvej 12L</div>
         </div>
 
         <div id="metadata-panel">
@@ -230,7 +231,7 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
         let scene, camera, renderer, controls;
-        let helsingorGroup, ejbyGroup;
+        let helsingorGroup, ejbyGroup, hadsundvejGroup;
         let xrayEnabled = false;
         let currentSubject = 'helsingor';
 
@@ -265,6 +266,20 @@
                     status: 'Museum / Kold Krig',
                     special: 'RADIATION_SHIELDING_ACTIVE'
                 }
+            },
+            hadsundvej12l: {
+                id: 'HADSUNDVEJ_12L',
+                title: 'Hadsundvej 12L (V6)',
+                metadata: {
+                    by: 'Rødovre',
+                    omraade: 'Islevdal',
+                    tenant: 'Flytte Møller',
+                    fire_class: 'EI60',
+                    fire_load: 'High (Furniture Storage)',
+                    miljoestatus: 'Vidensniveau 2 (V2)',
+                    bygningsareal: '3.427 m²',
+                    special: 'FIRE_SAFETY_LAYER_ACTIVE'
+                }
             }
         };
 
@@ -297,11 +312,15 @@
             // Build Models
             helsingorGroup = createHelsingorModel();
             ejbyGroup = createEjbyModel();
+            hadsundvejGroup = createHadsundvejModel();
 
             scene.add(helsingorGroup);
-            // ejbyGroup is added but hidden initially
+            
             ejbyGroup.visible = false;
             scene.add(ejbyGroup);
+
+            hadsundvejGroup.visible = false;
+            scene.add(hadsundvejGroup);
 
             updateUI();
 
@@ -309,6 +328,7 @@
         }
 
         function createHelsingorModel() {
+            // ... (keeping existing helsingor code)
             const group = new THREE.Group();
             const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
             const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 });
@@ -478,6 +498,7 @@
         }
 
         function createEjbyModel() {
+            // ... (keeping existing ejby code)
             const group = new THREE.Group();
             const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
             const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 });
@@ -626,6 +647,96 @@
             return group;
         }
 
+        function createHadsundvejModel() {
+            const group = new THREE.Group();
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.3 });
+            const yellowMat = new THREE.LineBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.6 });
+            const fireMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.9 });
+            const routeMat = new THREE.LineDashedMaterial({ color: 0x00ffff, dashSize: 0.5, gapSize: 0.2, transparent: true, opacity: 0.4 });
+
+            // Main Hall (20x5x15)
+            const mainGeom = new THREE.BoxGeometry(20, 5, 15);
+            const mainLine = new THREE.LineSegments(new THREE.EdgesGeometry(mainGeom), cyanMat);
+            group.add(mainLine);
+
+            // Loading Zone near mechanical gates
+            const loadingGeom = new THREE.PlaneGeometry(6, 4);
+            const loadingLine = new THREE.LineSegments(new THREE.EdgesGeometry(loadingGeom), yellowMat);
+            loadingLine.rotation.x = -Math.PI / 2;
+            loadingLine.position.set(-7, -2.45, 0);
+            group.add(loadingLine);
+
+            // High-Load Storage Areas (Flytte Møller)
+            const storageGeom = new THREE.BoxGeometry(8, 3.5, 6);
+            const storageLine = new THREE.LineSegments(new THREE.EdgesGeometry(storageGeom), cyanMat);
+            storageLine.position.set(4, -0.75, -3);
+            group.add(storageLine);
+
+            // Pallet Routes (Lineart on floor)
+            const routePoints = [
+                new THREE.Vector3(-7, -2.45, 0), new THREE.Vector3(5, -2.45, 0),
+                new THREE.Vector3(5, -2.45, 0), new THREE.Vector3(5, -2.45, -4),
+                new THREE.Vector3(5, -2.45, 0), new THREE.Vector3(5, -2.45, 4)
+            ];
+            const routeGeom = new THREE.BufferGeometry().setFromPoints(routePoints);
+            const route = new THREE.LineSegments(routeGeom, yellowMat);
+            group.add(route);
+
+            // Smoke Vents (Røgleme) on roof
+            for (let x = -6; x <= 6; x += 4) {
+                const ventGeom = new THREE.BoxGeometry(1.2, 0.4, 1.2);
+                const vent = new THREE.LineSegments(new THREE.EdgesGeometry(ventGeom), cyanMat);
+                vent.position.set(x, 2.7, 0);
+                group.add(vent);
+            }
+
+            // X-Ray Elements (Internal/Safety)
+            const xrayGroup = new THREE.Group();
+            xrayGroup.name = "xray";
+
+            // Fire Compartments (EI60 Walls) - Dashed
+            const fireWallGeom = new THREE.PlaneGeometry(15, 5);
+            const fireWall = new THREE.LineSegments(new THREE.EdgesGeometry(fireWallGeom), fireMat);
+            fireWall.rotation.y = Math.PI / 2;
+            fireWall.position.set(-2, 0, 0);
+            xrayGroup.add(fireWall);
+
+            // Staff Mezzanine (Indskudt dæk)
+            const mezzanineGeom = new THREE.BoxGeometry(6, 2.5, 6);
+            const mezzanine = new THREE.LineSegments(new THREE.EdgesGeometry(mezzanineGeom), pinkMat);
+            mezzanine.position.set(7, 1.25, 4.5);
+            xrayGroup.add(mezzanine);
+
+            // Mezzanine Partition (Kitchenette/Toilet)
+            const partGeom = new THREE.BoxGeometry(2, 2.5, 3);
+            const partition = new THREE.LineSegments(new THREE.EdgesGeometry(partGeom), pinkMat);
+            partition.position.set(8.5, 1.25, 5.5);
+            xrayGroup.add(partition);
+
+            // Fire Extinguishers (Points near exits)
+            const extPos = [[-9.5, -1.5, 7], [9.5, -1.5, -7], [-5, -1.5, 7]];
+            extPos.forEach(p => {
+                const extGeom = new THREE.BoxGeometry(0.3, 0.6, 0.3);
+                const ext = new THREE.LineSegments(new THREE.EdgesGeometry(extGeom), fireMat);
+                ext.position.set(...p);
+                xrayGroup.add(ext);
+            });
+
+            // Foundation Piles (V2 hazard awareness)
+            const pileGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -8, 0)]);
+            for (let x = -8; x <= 8; x += 4) {
+                for (let z = -6; z <= 6; z += 4) {
+                    const pile = new THREE.LineSegments(pileGeom, pinkMat);
+                    pile.position.set(x, -2.5, z);
+                    xrayGroup.add(pile);
+                }
+            }
+
+            group.add(xrayGroup);
+            return group;
+        }
+
         function updateUI() {
             const data = subjects[currentSubject];
             document.getElementById('source-id').innerText = data.id;
@@ -653,12 +764,13 @@
             // Update Nav
             document.querySelectorAll('.nav-item').forEach(el => {
                 el.classList.remove('active');
-                if (el.innerText.toLowerCase().includes(id)) el.classList.add('active');
+                if (el.innerText.toLowerCase().replace(/\s/g, '').includes(id.toLowerCase())) el.classList.add('active');
             });
 
             // Update Visibility
             helsingorGroup.visible = (id === 'helsingor');
             ejbyGroup.visible = (id === 'ejby');
+            hadsundvejGroup.visible = (id === 'hadsundvej12l');
 
             // Reset rotation or camera if desired
             camera.position.set(20, 15, 20);
@@ -674,12 +786,10 @@
             btn.classList.toggle('active');
 
             // Toggle visibility of pink groups
-            [helsingorGroup, ejbyGroup].forEach(group => {
+            [helsingorGroup, ejbyGroup, hadsundvejGroup].forEach(group => {
                 const xray = group.getObjectByName('xray');
                 if (xray) {
                     xray.children.forEach(child => {
-                        // Keep foundation piles subtle even when ON, but hidden when OFF
-                        // Or just toggle visibility
                         child.visible = xrayEnabled;
                     });
                 }
@@ -698,12 +808,13 @@
             
             if (helsingorGroup.visible) helsingorGroup.rotation.y += 0.001;
             if (ejbyGroup.visible) ejbyGroup.rotation.y += 0.001;
+            if (hadsundvejGroup.visible) hadsundvejGroup.rotation.y += 0.001;
             
             renderer.render(scene, camera);
         }
 
         // Initialize X-Ray state (start with OFF)
-        [helsingorGroup, ejbyGroup].forEach(group => {
+        [helsingorGroup, ejbyGroup, hadsundvejGroup].forEach(group => {
             const xray = group.getObjectByName('xray');
             if (xray) xray.children.forEach(c => c.visible = false);
         });
