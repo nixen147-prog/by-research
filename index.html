@@ -246,6 +246,7 @@
                     stilart: 'Nederlandsk Renæssance',
                     dybde: '-6.0m',
                     fundament: '1.600 træpæle',
+                    tracks: '5 (Lineart Active)',
                     status: 'Fredet (1990)',
                     special: 'KONGELIG_VENTESAL_DETECTED'
                 }
@@ -260,6 +261,7 @@
                     periode: '1952-1954',
                     dybde: '-12.0m',
                     materiale: 'Armeret Beton',
+                    air_filtration: 'GAS-SAFE / HEPA',
                     status: 'Museum / Kold Krig',
                     special: 'RADIATION_SHIELDING_ACTIVE'
                 }
@@ -318,6 +320,13 @@
             const mainLine = new THREE.LineSegments(mainEdges, cyanMat);
             group.add(mainLine);
 
+            // Office Wing (Administrative Floor)
+            const officeGeom = new THREE.BoxGeometry(8, 2, 12);
+            const officeEdges = new THREE.EdgesGeometry(officeGeom);
+            const officeLine = new THREE.LineSegments(officeEdges, cyanMat);
+            officeLine.position.set(0, 3.5, 0);
+            group.add(officeLine);
+
             // Gables (Svungne Renæssancegavle)
             const createGable = (zPos) => {
                 const points = [];
@@ -373,24 +382,63 @@
                 group.add(tip);
             });
 
-            // Platform Roofs (Perrontage)
-            const platGeom = new THREE.BoxGeometry(12, 0.2, 30);
+            // Platform Roofs (Perrontage) - 3 Platforms
+            const platGeom = new THREE.BoxGeometry(6, 0.2, 30);
             const platEdges = new THREE.EdgesGeometry(platGeom);
-            const platform1 = new THREE.LineSegments(platEdges, platformMat);
-            platform1.position.set(-12, 1, 0);
-            group.add(platform1);
+            [-11, -17, -23].forEach(x => {
+                const platform = new THREE.LineSegments(platEdges, platformMat);
+                platform.position.set(x, 1, 0);
+                group.add(platform);
 
-            // Platform pillars
-            for (let z = -14; z <= 14; z += 4) {
-                const pillarGeom = new THREE.CylinderGeometry(0.1, 0.1, 3.5, 8);
-                const pillar = new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), platformMat);
-                pillar.position.set(-12, -0.75, z);
-                group.add(pillar);
-            }
+                // Platform pillars
+                for (let z = -14; z <= 14; z += 4) {
+                    const pillarGeom = new THREE.CylinderGeometry(0.1, 0.1, 3.5, 8);
+                    const pillar = new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), platformMat);
+                    pillar.position.set(x, -0.75, z);
+                    group.add(pillar);
+                }
+            });
 
-            // X-Ray Elements (Pink)
+            // Tracks (5 Tracks) - Lineart
+            const trackPoints = [new THREE.Vector3(0, 0, -15), new THREE.Vector3(0, 0, 15)];
+            const trackGeom = new THREE.BufferGeometry().setFromPoints(trackPoints);
+            const trackMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15 });
+            [-8, -14, -20, -26, -32].forEach(x => {
+                const track = new THREE.Line(trackGeom, trackMat);
+                track.position.set(x, -2.5, 0);
+                group.add(track);
+            });
+
+            // X-Ray Elements (Pink/Cyan Interior)
             const xrayGroup = new THREE.Group();
             xrayGroup.name = "xray";
+
+            // Main Hall Interior (Ankomsthal)
+            const hallGeom = new THREE.BoxGeometry(9, 4.5, 14);
+            const hall = new THREE.LineSegments(new THREE.EdgesGeometry(hallGeom), pinkMat);
+            hall.position.set(0, 0, 0);
+            xrayGroup.add(hall);
+
+            // Hall Columns
+            const colGeom = new THREE.CylinderGeometry(0.1, 0.1, 4.5, 8);
+            for (let x = -2; x <= 2; x += 4) {
+                for (let z = -6; z <= 6; z += 3) {
+                    const col = new THREE.LineSegments(new THREE.EdgesGeometry(colGeom), pinkMat);
+                    col.position.set(x, 0, z);
+                    xrayGroup.add(col);
+                }
+            }
+
+            // Service Nodes (Cyan Highlights)
+            const serviceGeom = new THREE.BoxGeometry(1.5, 1, 2);
+            const serviceMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.9 });
+            const service1 = new THREE.LineSegments(new THREE.EdgesGeometry(serviceGeom), serviceMat);
+            service1.position.set(-3, -1, 5); // 7-Eleven
+            xrayGroup.add(service1);
+
+            const service2 = new THREE.LineSegments(new THREE.EdgesGeometry(serviceGeom), serviceMat);
+            service2.position.set(-3, -1, 2); // Ticket Center
+            xrayGroup.add(service2);
 
             // Royal Waiting Room (Detailed)
             const roomGeom = new THREE.BoxGeometry(3, 2.5, 4);
@@ -464,7 +512,7 @@
                 group.add(new THREE.Line(geom, voldMat));
             });
 
-            // Communication Towers
+            // Communication Towers & Radio Link
             const towerGeom = new THREE.BoxGeometry(0.5, 12, 0.5);
             const towerEdges = new THREE.EdgesGeometry(towerGeom);
             const towerPos = [[-8, 6, -10], [8, 6, -10], [0, 8, 12]];
@@ -474,10 +522,33 @@
                 group.add(tower);
             });
 
+            // External Radio Link (70m Mast Base)
+            const mastBaseGeom = new THREE.CylinderGeometry(1.5, 2, 2, 4);
+            const mastBase = new THREE.LineSegments(new THREE.EdgesGeometry(mastBaseGeom), cyanMat);
+            mastBase.position.set(-12, 6, 0);
+            mastBase.rotation.y = Math.PI / 4;
+            group.add(mastBase);
+
+            const mastStructureGeom = new THREE.BoxGeometry(1, 8, 1);
+            const mastStructure = new THREE.LineSegments(new THREE.EdgesGeometry(mastStructureGeom), cyanMat);
+            mastStructure.position.set(-12, 11, 0);
+            group.add(mastStructure);
+
             // X-Ray Elements (Bunker Infrastructure)
             const xrayGroup = new THREE.Group();
             xrayGroup.name = "xray";
             const bunkerMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.7 });
+
+            // Labyrinthic Corridors (Perimeter System)
+            const corridorPoints = [
+                new THREE.Vector3(-10, -5, -8), new THREE.Vector3(10, -5, -8),
+                new THREE.Vector3(10, -5, -8), new THREE.Vector3(10, -5, 8),
+                new THREE.Vector3(10, -5, 8), new THREE.Vector3(-10, -5, 8),
+                new THREE.Vector3(-10, -5, 8), new THREE.Vector3(-10, -5, -8)
+            ];
+            const corridorGeom = new THREE.BufferGeometry().setFromPoints(corridorPoints);
+            const corridor = new THREE.Line(corridorGeom, bunkerMat);
+            xrayGroup.add(corridor);
 
             // Operations Room (Double Height)
             const opsGeom = new THREE.BoxGeometry(8, 6, 8);
@@ -486,34 +557,55 @@
             opsRoom.position.set(0, -5, 0);
             xrayGroup.add(opsRoom);
 
+            // Communication Node (Telefonrum)
+            const commsGeom = new THREE.BoxGeometry(4, 3, 4);
+            const commsRoom = new THREE.LineSegments(new THREE.EdgesGeometry(commsGeom), bunkerMat);
+            commsRoom.position.set(6, -7.5, 4);
+            xrayGroup.add(commsRoom);
+
             // Gallery inside Operations Room
             const galleryGeom = new THREE.BoxGeometry(7.8, 0.1, 7.8);
             const gallery = new THREE.LineSegments(new THREE.EdgesGeometry(galleryGeom), bunkerMat);
             gallery.position.set(0, -3.5, 0);
             xrayGroup.add(gallery);
 
-            // Engine Room (Diesel Generators)
+            // Engine Room (Diesel Generators & Filtration)
             const engineGeom = new THREE.BoxGeometry(4, 3, 5);
             const engineEdges = new THREE.EdgesGeometry(engineGeom);
             const engineRoom = new THREE.LineSegments(engineEdges, bunkerMat);
             engineRoom.position.set(-8, -7.5, -5);
             xrayGroup.add(engineRoom);
             
-            // Generators
+            // Diesel Generator Assembly
             for (let z = -6.5; z <= -3.5; z += 1.5) {
-                const genGeom = new THREE.BoxGeometry(1, 1, 0.8);
+                const genGeom = new THREE.BoxGeometry(1.2, 0.8, 0.8);
                 const gen = new THREE.LineSegments(new THREE.EdgesGeometry(genGeom), bunkerMat);
-                gen.position.set(-8, -8, z);
+                gen.position.set(-8.5, -8, z);
                 xrayGroup.add(gen);
             }
 
-            // Entry Tunnel ('Atombeskyttet')
+            // Technical Bay: Air Filtration Units (Gas-Safe)
+            for (let z = -7; z <= -3; z += 2) {
+                const filterGeom = new THREE.CylinderGeometry(0.4, 0.4, 2, 6);
+                const filter = new THREE.LineSegments(new THREE.EdgesGeometry(filterGeom), bunkerMat);
+                filter.position.set(-6.5, -7.5, z);
+                xrayGroup.add(filter);
+            }
+
+            // Entry Tunnel & Security Sluice
             const tunnelGeom = new THREE.BoxGeometry(15, 2, 2);
             const tunnelEdges = new THREE.EdgesGeometry(tunnelGeom);
             const tunnel = new THREE.LineSegments(tunnelEdges, bunkerMat);
             tunnel.position.set(-15, -3.5, 5);
             tunnel.rotation.y = -0.3;
             xrayGroup.add(tunnel);
+
+            // Security Sluice (Billetsluse) with reinforced frames
+            const sluiceGeom = new THREE.BoxGeometry(3, 2.5, 3);
+            const sluice = new THREE.LineSegments(new THREE.EdgesGeometry(sluiceGeom), bunkerMat);
+            sluice.position.set(-10, -3.5, 3.5);
+            sluice.rotation.y = -0.3;
+            xrayGroup.add(sluice);
 
             // Ventilation Shafts
             const ventPos = [[4, 0, 4], [-4, 0, -4], [6, 0, -8]];
