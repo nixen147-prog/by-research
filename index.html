@@ -380,9 +380,10 @@
             arch.add(box);
 
             // Towers
+            const towerGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 8, 2));
             for (let x of [-4, 4]) {
                 for (let z of [-7, 7]) {
-                    const tower = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 8, 2)), cyanMat);
+                    const tower = new THREE.LineSegments(towerGeom, cyanMat);
                     tower.position.set(x, 1.5, z);
                     arch.add(tower);
                 }

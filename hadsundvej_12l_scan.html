@@ -69,7 +69,15 @@
             CONTAMINANTS: VINYLCHLORIDE_HYDROCARBONS<br>
             GROUNDWATER_SCAN: PEJLERØR_ACTIVE<br>
             HISTORIC_USE: METAL_FAB_AUTO_WASH<br>
-            <span style="color: #ff3366">WARNING: SUB-SURFACE_POLLUTION_DETECTED</span>
+            <span style="color: #ff3366">WARNING: SUB-SURFACE_POLLUTION_DETECTED</span><br><br>
+            WELL_METRICS:<br>
+            PR-101: <span style="color: #ff3366">4.2 µg/l VC</span><br>
+            PR-102: 1.1 µg/l VC<br>
+            PR-103: 0.2 µg/l VC<br>
+            P-12A: <span style="color: #ff3366">12.5 µg/l VC (CRIT)</span><br><br>
+            INFRASTRUCTURE:<br>
+            FIREWALLS (EI60): INSTALLED<br>
+            ROOF_VENTS: ACTIVE
         </div>
 
         <div id="status-bar">
@@ -140,22 +148,37 @@
             // Hovedhal (68.5m x 50m x 6.5m)
             const mainGeom = new THREE.BoxGeometry(68.5, 6.5, 50);
             const mainEdges = new THREE.EdgesGeometry(mainGeom);
-            const main = new THREE.LineSegments(mainEdges, new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 }));
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
+            const dimCyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.4 });
+            const main = new THREE.LineSegments(mainEdges, cyanMat);
             main.position.y = 3.25; // Placeret på terræn
             industrialGroup.add(main);
+
+            // Røgudluftning (Røgleme i tagkonstruktion)
+            const smokeVentGeom = new THREE.BoxGeometry(2, 0.5, 2);
+            const smokeVentEdges = new THREE.EdgesGeometry(smokeVentGeom);
+            for (let x = -20; x <= 20; x += 15) {
+                for (let z = -15; z <= 15; z += 15) {
+                    const vent = new THREE.LineSegments(smokeVentEdges, cyanMat);
+                    vent.position.set(x, 6.75, z);
+                    industrialGroup.add(vent);
+                }
+            }
 
             // Vinduesbånd (Kontor/Personale-sektion)
             const winGeom = new THREE.PlaneGeometry(3, 1.5);
             const winMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.5 });
+            const winEdges = new THREE.EdgesGeometry(winGeom);
             for (let x = -30; x <= 30; x += 8) {
-                const win = new THREE.LineSegments(new THREE.EdgesGeometry(winGeom), winMat);
+                const win = new THREE.LineSegments(winEdges, winMat);
                 win.position.set(x, 4.5, 25.05);
                 industrialGroup.add(win);
             }
 
             // Personale-dør
             const doorGeom = new THREE.PlaneGeometry(1.2, 2.2);
-            const door = new THREE.LineSegments(new THREE.EdgesGeometry(doorGeom), new THREE.LineBasicMaterial({ color: 0x00ffcc }));
+            const doorMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
+            const door = new THREE.LineSegments(new THREE.EdgesGeometry(doorGeom), doorMat);
             door.position.set(-33, 1.1, 25.05);
             industrialGroup.add(door);
 
@@ -169,8 +192,10 @@
 
             // Trappe til Mezzanin
             const stairGeom = new THREE.BoxGeometry(2, 0.1, 0.4);
+            const stairEdges = new THREE.EdgesGeometry(stairGeom);
+            const stairMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
             for (let i = 0; i < 18; i++) {
-                const step = new THREE.LineSegments(new THREE.EdgesGeometry(stairGeom), new THREE.LineBasicMaterial({ color: 0x00ffcc }));
+                const step = new THREE.LineSegments(stairEdges, stairMat);
                 step.position.set(-14, 0.1 + (i * 0.18), 10 + (i * 0.4));
                 industrialGroup.add(step);
             }
@@ -178,8 +203,9 @@
             // Reolsystemer (High-Density Storage Racks)
             const rackGeom = new THREE.BoxGeometry(4, 5.5, 30);
             const rackMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1 });
+            const rackEdges = new THREE.EdgesGeometry(rackGeom);
             for (let x = -10; x <= 30; x += 10) {
-                const rack = new THREE.LineSegments(new THREE.EdgesGeometry(rackGeom), rackMat);
+                const rack = new THREE.LineSegments(rackEdges, rackMat);
                 rack.position.set(x, 2.75, -5);
                 industrialGroup.add(rack);
             }
@@ -187,24 +213,34 @@
             // Læsseporte (Flytte Møller Logistics - 4.0m x 4.2m)
             const gateGeom = new THREE.PlaneGeometry(4, 4.2);
             const gateMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
+            const gateEdges = new THREE.EdgesGeometry(gateGeom);
             for (let x = -10; x <= 30; x += 10) {
-                const gate = new THREE.LineSegments(new THREE.EdgesGeometry(gateGeom), gateMat);
+                const gate = new THREE.LineSegments(gateEdges, gateMat);
                 gate.position.set(x, 2.1, 25.05);
                 industrialGroup.add(gate);
             }
 
             // Transformerstation (1000 kVA)
             const transGeom = new THREE.BoxGeometry(3, 3, 3);
-            const trans = new THREE.LineSegments(new THREE.EdgesGeometry(transGeom), new THREE.LineBasicMaterial({ color: 0x00ffcc }));
+            const transMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
+            const trans = new THREE.LineSegments(new THREE.EdgesGeometry(transGeom), transMat);
             trans.position.set(-40, 1.5, -20);
             industrialGroup.add(trans);
 
             // Interne Brandvægge (EI60) - Cyan planer
             const wallMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.4 });
-            const firewall1 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(50, 6.5)), wallMat);
+            const firewallGeom = new THREE.PlaneGeometry(50, 6.5);
+            const firewallEdges = new THREE.EdgesGeometry(firewallGeom);
+
+            const firewall1 = new THREE.LineSegments(firewallEdges, wallMat);
             firewall1.rotation.y = Math.PI / 2;
             firewall1.position.set(0, 3.25, 0);
             industrialGroup.add(firewall1);
+
+            const firewall2 = new THREE.LineSegments(firewallEdges, wallMat);
+            firewall2.rotation.y = Math.PI / 2;
+            firewall2.position.set(-20, 3.25, 0);
+            industrialGroup.add(firewall2);
         }
 
         function createGroundwaterLayer() {
@@ -231,8 +267,9 @@
             // Trappe til Kælder (Unit 12A)
             const stairGeom = new THREE.BoxGeometry(2, 0.1, 0.4);
             const stairMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.5 });
+            const stairEdges = new THREE.EdgesGeometry(stairGeom);
             for (let i = 0; i < 20; i++) {
-                const step = new THREE.LineSegments(new THREE.EdgesGeometry(stairGeom), stairMat);
+                const step = new THREE.LineSegments(stairEdges, stairMat);
                 step.position.set(-34, -0.1 - (i * 0.15), 1 - (i * 0.4));
                 industrialGroup.add(step);
             }
@@ -256,19 +293,30 @@
         }
 
         function createEnvironmentalWells() {
-            // Pejlerør / Miljø-boringer (Pink lodrette linjer med top-markør)
-            const wellGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -15, 0)]);
+            // Boringsoversigt & Miljødata (Pejlerør)
             const wellMat = new THREE.LineBasicMaterial({ color: 0xff3366, linewidth: 2 });
+            const markerGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(0.8, 0.8, 0.8));
+
+            // PR-101: -15.0m, PR-102: -12.5m, PR-103: -18.0m, P-12A: -8.0m
+            const wells = [
+                { id: 'PR-101', depth: 15.0, pos: [-12, 0, -8] },
+                { id: 'PR-102', depth: 12.5, pos: [18, 0, 10] },
+                { id: 'PR-103', depth: 18.0, pos: [5, 0, -12] },
+                { id: 'P-12A',  depth: 8.0,  pos: [-25.75, 0, 13] } // In basement area
+            ];
             
-            const wellPositions = [[-12, 0, -8], [18, 0, 10], [5, 0, -12]];
-            wellPositions.forEach(p => {
+            wells.forEach(w => {
+                const wellGeom = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(0, -w.depth, 0)
+                ]);
                 const well = new THREE.LineSegments(wellGeom, wellMat);
-                well.position.set(...p);
+                well.position.set(...w.pos);
                 industrialGroup.add(well);
                 
                 // Top markør
-                const marker = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(0.5, 0.5, 0.5)), wellMat);
-                marker.position.set(p[0], 0.25, p[2]);
+                const marker = new THREE.LineSegments(markerGeom, wellMat);
+                marker.position.set(w.pos[0], 0.4, w.pos[2]);
                 industrialGroup.add(marker);
             });
         }
