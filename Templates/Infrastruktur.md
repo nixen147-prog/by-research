@@ -18,3 +18,4 @@ Tunneller, skjulte rum eller forsvundne spor.
 
 ---
 Tags: #infrastruktur #historie #skjult
+Created: {{date}}

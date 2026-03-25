@@ -7,14 +7,22 @@
 
 ---
 
-## Beskrivelse
-Arkitektoniske detaljer og bygningens formål.
+## Tekniske Data (Mål)
+- **Areal:** {{area}} m²
+- **Fundament:** {{foundation_type}}
+- **Antal pæle (Estimeret):** {{piles}}
+- **Dybde:** {{depth}}
 
-## Historie
-Tidligere brugere, ombygninger eller historiske hændelser knyttet til bygningen.
+## Historie & Beskrivelse
+{{description}}
+
+## Skjult Infrastruktur
+- **Type:** {{hidden_infra_type}}
+- **Status:** {{status}}
 
 ## Fotos & Tegninger
 - [[Kort_og_Billeder/{{photo_link}}]]
 
 ---
-Tags: #arkitektur #bygning
+Tags: #arkitektur #bygning #jules-research #maalinger
+Created: {{date}}
