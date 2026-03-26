@@ -220,9 +220,12 @@
         </div>
         
         <div id="nav-list">
-            <div class="nav-item active" onclick="switchSubject('helsingor')">Helsingør Station</div>
+            <div class="nav-item active" onclick="switchSubject('map')">Kort Oversigt</div>
+            <div class="nav-item" onclick="switchSubject('helsingor')">Helsingør Station</div>
             <div class="nav-item" onclick="switchSubject('ejby')">Ejbybunkeren</div>
             <div class="nav-item" onclick="switchSubject('hadsundvej12l')">Hadsundvej 12L</div>
+            <div class="nav-item" onclick="switchSubject('sctanna38')">Sct Anna Gade 38</div>
+            <div class="nav-item" onclick="switchSubject('farum')">Farum Kulturhus</div>
         </div>
 
         <div id="metadata-panel">
@@ -278,9 +281,22 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
         let scene, camera, renderer, controls;
-        let helsingorGroup, ejbyGroup, hadsundvejGroup;
-        let currentSubject = 'helsingor';
+        let mapGroup, helsingorGroup, ejbyGroup, hadsundvejGroup, sctanna38Group, farumGroup;
+        let currentSubject = 'map';
         let xrayEnabled = false;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // SHARED MATERIALS
+        const mats = {
+            cyan: new THREE.LineBasicMaterial({ color: 0x00ffcc }),
+            cyanFade: new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.2 }),
+            cyanVol: new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.05, side: THREE.DoubleSide }),
+            pink: new THREE.LineBasicMaterial({ color: 0xff3366 }),
+            pinkFade: new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.3 }),
+            pinkVol: new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.08, side: THREE.DoubleSide }),
+            grid: new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15 })
+        };
 
         const layers = {
             architecture: true,
@@ -291,39 +307,86 @@
         };
 
         const subjects = {
+            map: {
+                id: 'DANMARK_OVERVIEW',
+                title: 'Kort Oversigt',
+                metadata: {
+                    type: 'Geografisk Oversigt',
+                    regioner: 'Sjælland, Fyn',
+                    lokationer: '5 Aktive',
+                    status: 'OPERATIONAL',
+                    last_sync: '2026-03-26'
+                }
+            },
             helsingor: {
                 id: 'HELSINGØR_STATION',
                 title: 'Helsingør Station',
+                scan_url: '3d_visualizer.html',
                 metadata: {
                     by: 'Helsingør',
                     aarstal: '1891',
                     arkitekt: 'Holsøe & Wenck',
-                    fundament: '1.600 træpæle',
-                    tracks: '5 Tracks',
-                    special: 'ROYAL_WAITING_ROOM'
+                    stilart: 'Nederlandsk Renæssance',
+                    fundament: '1.600 træpæle (Pælefundering)',
+                    tracks: '5 Spor (1-5)',
+                    special: 'KONGELIG_VENTESAL',
+                    status: 'FREDET_1990'
                 }
             },
             ejby: {
                 id: 'EJBYBUNKEREN',
                 title: 'Ejbybunkeren',
+                scan_url: 'ejbybunkeren_scan.html',
                 metadata: {
                     by: 'Rødovre',
-                    periode: '1952-1954',
-                    type: 'Cold War Command',
-                    dybde: '-12.0m',
-                    air: 'Gas-Safe HEPA',
-                    special: 'RADIATION_SHIELD'
+                    periode: '1952-1954 (Kold Krig)',
+                    type: 'Kommando-central (Københavns Befæstning)',
+                    dybde: '-12.0m (2 etager)',
+                    sikring: 'GAS-SAFE / HEPA',
+                    special: 'RADIATION_SHIELD',
+                    status: 'MUSEUM'
                 }
             },
             hadsundvej12l: {
                 id: 'HADSUNDVEJ_12L',
                 title: 'Hadsundvej 12L',
+                scan_url: 'hadsundvej_12l_scan.html',
                 metadata: {
-                    tenant: 'Flytte Møller',
-                    fire_class: 'EI60',
+                    by: 'Rødovre (Islevdal)',
+                    tenant: 'Flytte Møller (Logistik)',
+                    fire_class: 'EI60 (Brandvægge)',
                     area: '3.427 m²',
-                    pollution: 'V2 Kortlagt',
-                    special: 'LOGISTICS_HUB'
+                    pollution: 'V2 (TCE_FORURENING)',
+                    special: 'PEJLERØR_OVERVÅGNING',
+                    infra: '1000 kVA Transformer'
+                }
+            },
+            sctanna38: {
+                id: 'SCT_ANNA_GADE_38',
+                title: 'Sct Anna Gade 38',
+                scan_url: 'sct_anna_gade_38_scan.html',
+                metadata: {
+                    by: 'Helsingør',
+                    aarstal: '1782 (Ombygget 1931)',
+                    arkitekt: 'Karmeliterklosteret (Admin)',
+                    bevaringsvaerdi: '1 (Højeste kategori)',
+                    area: '1.578 m²',
+                    special: 'KORDEGNEKONTOR',
+                    context: 'Middelalderkirkegård'
+                }
+            },
+            farum: {
+                id: 'FARUM_KULTURHUS',
+                title: 'Farum Kulturhus',
+                scan_url: 'farum_kulturhus_scan.html',
+                metadata: {
+                    by: 'Farum',
+                    aarstal: '1992 (Ombygning)',
+                    arkitekt: 'Kommunal',
+                    stilart: 'Postmoderne Re-use',
+                    area: '8.000 m²',
+                    special: 'GLASTAG_FOYER',
+                    status: 'KULTUR_HUB'
                 }
             }
         };
@@ -348,16 +411,88 @@
             const grid = new THREE.GridHelper(50, 50, 0x111111, 0x222222);
             scene.add(grid);
 
+            mapGroup = buildMap();
             helsingorGroup = buildHelsingor();
             ejbyGroup = buildEjby();
             hadsundvejGroup = buildHadsundvej();
+            sctanna38Group = buildSctAnna38();
+            farumGroup = buildFarum();
 
+            scene.add(mapGroup);
             scene.add(helsingorGroup);
             scene.add(ejbyGroup);
             scene.add(hadsundvejGroup);
+            scene.add(sctanna38Group);
+            scene.add(farumGroup);
 
-            switchSubject('helsingor');
+            switchSubject('map');
             window.addEventListener('resize', onWindowResize);
+            
+            renderer.domElement.addEventListener('click', (event) => {
+                if (currentSubject !== 'map') return;
+                
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(mapGroup.children, true);
+                
+                if (intersects.length > 0) {
+                    const obj = intersects[0].object;
+                    const id = obj.userData.id || (obj.parent && obj.parent.userData.id);
+                    if (id) switchSubject(id);
+                }
+            });
+        }
+
+        function buildMap() {
+            const group = new THREE.Group();
+            group.name = 'map';
+
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.3 });
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366 });
+
+            // Simplified Denmark Outline (Stylized)
+            const mapShape = new THREE.BufferGeometry();
+            const vertices = new Float32Array([
+                // Sjælland approx
+                10,0,5, 12,0,8, 15,0,7, 16,0,3, 14,0,0, 11,0,0, 10,0,5,
+                // Fyn approx
+                2,0,2, 5,0,4, 6,0,1, 3,0,0, 2,0,2
+            ]);
+            mapShape.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            const mapLine = new THREE.Line(mapShape, cyanMat);
+            group.add(mapLine);
+
+            // Pins
+            const pins = [
+                { name: 'Helsingør Station', pos: [15, 0, 8], id: 'helsingor' },
+                { name: 'Sct Anna Gade 38', pos: [15.2, 0, 8.2], id: 'sctanna38' },
+                { name: 'Farum Kulturhus', pos: [11.5, 0, 6.0], id: 'farum' },
+                { name: 'Rødovre (Ejby)', pos: [13, 0, 4], id: 'ejby' },
+                { name: 'Rødovre (Hadsundvej)', pos: [13.2, 0, 4.2], id: 'hadsundvej12l' },
+                { name: 'Svendborg', pos: [4, 0, 1], id: 'map' }
+            ];
+
+            pins.forEach(pin => {
+                const pinGeom = new THREE.ConeGeometry(0.5, 2, 4);
+                const pinMat = new THREE.MeshBasicMaterial({ color: 0xff3366, wireframe: true });
+                const pinMesh = new THREE.Mesh(pinGeom, pinMat);
+                pinMesh.position.set(pin.pos[0], 1, pin.pos[2]);
+                pinMesh.rotation.x = Math.PI;
+                pinMesh.userData = { id: pin.id };
+                group.add(pinMesh);
+
+                const ringGeom = new THREE.TorusGeometry(0.6, 0.05, 8, 24);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.5 });
+                const ring = new THREE.Mesh(ringGeom, ringMat);
+                ring.rotation.x = Math.PI / 2;
+                ring.position.set(pin.pos[0], 0, pin.pos[2]);
+                group.add(ring);
+            });
+
+            return group;
         }
 
         function createLayerGroup(name) {
@@ -372,28 +507,41 @@
             const sub = createLayerGroup('substructure');
             const energy = createLayerGroup('energy');
 
-            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
-            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.3 });
+            // MAIN BODY
+            const bodyGeom = new THREE.BoxGeometry(10, 5, 16);
+            arch.add(new THREE.LineSegments(new THREE.EdgesGeometry(bodyGeom), mats.cyan));
+            arch.add(new THREE.Mesh(bodyGeom, mats.cyanVol));
 
-            // Main Building
-            const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10, 5, 16)), cyanMat);
-            arch.add(box);
-
-            // Towers
-            const towerGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 8, 2));
+            // TOWERS (Volume & Detailed Spires)
+            const towerGeom = new THREE.BoxGeometry(2, 8, 2);
+            const spireGeom = new THREE.CylinderGeometry(0, 1.2, 3, 4);
             for (let x of [-4, 4]) {
                 for (let z of [-7, 7]) {
-                    const tower = new THREE.LineSegments(towerGeom, cyanMat);
+                    const tower = new THREE.Mesh(towerGeom, mats.cyanVol);
                     tower.position.set(x, 1.5, z);
                     arch.add(tower);
+                    arch.add(new THREE.LineSegments(new THREE.EdgesGeometry(towerGeom), mats.cyan).position.set(x, 1.5, z));
+                    
+                    const spire = new THREE.LineSegments(new THREE.EdgesGeometry(spireGeom), mats.cyan);
+                    spire.position.set(x, 7, z);
+                    arch.add(spire);
                 }
             }
 
-            // Piles
-            const pileGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(0.2, 8, 0.2));
-            for (let x = -4; x <= 4; x += 2) {
-                for (let z = -7; z <= 7; z += 2) {
-                    const pile = new THREE.LineSegments(pileGeom, pinkMat);
+            // PLATFORMS & TRACKS
+            const platGeom = new THREE.BoxGeometry(2, 0.5, 30);
+            for (let x of [-8, -11, -14]) {
+                const plat = new THREE.Mesh(platGeom, mats.cyanVol);
+                plat.position.set(x, -0.25, 0);
+                arch.add(plat);
+                arch.add(new THREE.LineSegments(new THREE.EdgesGeometry(platGeom), mats.cyanFade).position.set(x, -0.25, 0));
+            }
+
+            // PILES (1,600 Piles visualization)
+            const pileGeom = new THREE.BoxGeometry(0.15, 10, 0.15);
+            for (let x = -4.5; x <= 4.5; x += 1.5) {
+                for (let z = -7.5; z <= 7.5; z += 1.5) {
+                    const pile = new THREE.LineSegments(new THREE.EdgesGeometry(pileGeom), mats.pinkFade);
                     pile.position.set(x, -5, z);
                     sub.add(pile);
                 }
@@ -407,24 +555,35 @@
             const group = new THREE.Group();
             const arch = createLayerGroup('architecture');
             const sub = createLayerGroup('substructure');
+            const energy = createLayerGroup('energy');
 
-            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.2 });
-            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366 });
+            // SURFACE VOLD (Low opacity)
+            const voldGeom = new THREE.BoxGeometry(25, 3, 30);
+            arch.add(new THREE.Mesh(voldGeom, mats.cyanVol));
+            arch.add(new THREE.LineSegments(new THREE.EdgesGeometry(voldGeom), mats.cyanFade));
 
-            // Volden
-            const vold = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(20, 2, 25)), cyanMat);
-            arch.add(vold);
+            // BUNKER CORE (High Detail Volume)
+            const levels = [
+                { w: 14, h: 3.5, d: 18, y: -4 },
+                { w: 16, h: 4, d: 22, y: -9 }
+            ];
+            levels.forEach(l => {
+                const geom = new THREE.BoxGeometry(l.w, l.h, l.d);
+                sub.add(new THREE.Mesh(geom, mats.pinkVol));
+                sub.add(new THREE.LineSegments(new THREE.EdgesGeometry(geom), mats.pink));
+                
+                // Floor inside bunker
+                const floor = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(l.w-0.5, l.d-0.5)), mats.grid);
+                floor.rotation.x = Math.PI / 2;
+                floor.position.y = l.y;
+                sub.add(floor);
+            });
 
-            // Bunker Levels
-            const l1 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10, 3, 15)), pinkMat);
-            l1.position.y = -4;
-            sub.add(l1);
+            // MAST
+            const mastGeom = new THREE.CylinderGeometry(0.05, 0.2, 18, 6);
+            energy.add(new THREE.LineSegments(new THREE.EdgesGeometry(mastGeom), mats.pink).position.set(8, 9, -10));
 
-            const l2 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(12, 3, 18)), pinkMat);
-            l2.position.y = -8;
-            sub.add(l2);
-
-            group.add(arch, sub, createLayerGroup('hazard'), createLayerGroup('safety'), createLayerGroup('energy'));
+            group.add(arch, sub, createLayerGroup('hazard'), createLayerGroup('safety'), energy);
             return group;
         }
 
@@ -435,52 +594,190 @@
             const hazard = createLayerGroup('hazard');
             const energy = createLayerGroup('energy');
 
-            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
-            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.4 });
+            // MAIN HALL
+            const mainGeom = new THREE.BoxGeometry(25, 6, 20);
+            arch.add(new THREE.Mesh(mainGeom, mats.cyanVol));
+            arch.add(new THREE.LineSegments(new THREE.EdgesGeometry(mainGeom), mats.cyanFade));
 
-            // Main Hall
-            const main = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(20, 5, 15)), cyanMat);
-            arch.add(main);
+            // LOADING DOCKS
+            const dockGeom = new THREE.BoxGeometry(3, 4, 2);
+            for (let x of [-10, -5, 0, 5, 10]) {
+                const dock = new THREE.Mesh(dockGeom, mats.cyanVol);
+                dock.position.set(x, 2, 10);
+                arch.add(dock);
+                arch.add(new THREE.LineSegments(new THREE.EdgesGeometry(dockGeom), mats.cyan).position.set(x, 2, 10));
+            }
 
-            // Basement
-            const basement = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10, 3, 12)), pinkMat);
-            basement.position.set(-4, -4, 0);
-            sub.add(basement);
+            // INTERNAL PILLARS
+            const pillarGeom = new THREE.BoxGeometry(0.4, 6, 0.4);
+            for (let x of [-8, 8]) {
+                for (let z of [-6, 6]) {
+                    arch.add(new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), mats.cyan).position.set(x, 3, z));
+                }
+            }
 
-            // Hazard Zone
-            const haz = new THREE.Mesh(new THREE.BoxGeometry(15, 0.1, 15), new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 }));
-            haz.position.y = -2.5;
+            // BASEMENT
+            const subGeom = new THREE.BoxGeometry(14, 4, 16);
+            sub.add(new THREE.Mesh(subGeom, mats.pinkVol));
+            sub.add(new THREE.LineSegments(new THREE.EdgesGeometry(subGeom), mats.pink).position.set(-5, -4, 0));
+
+            // HAZARD PULSE
+            const haz = new THREE.Mesh(new THREE.BoxGeometry(30, 0.1, 30), new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.2 }));
+            haz.position.y = -10;
             haz.name = "hazard_pulse";
             hazard.add(haz);
-
-            // Truck
-            const truck = new THREE.Group();
-            truck.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 2, 6)), cyanMat));
-            truck.position.set(-12, -1.5, 5);
-            energy.add(truck);
 
             group.add(arch, sub, hazard, createLayerGroup('safety'), energy);
             return group;
         }
 
+        function buildSctAnna38() {
+            const group = new THREE.Group();
+            const arch = createLayerGroup('architecture');
+            const sub = createLayerGroup('substructure');
+
+            // MAIN BUILDING
+            const mainGeom = new THREE.BoxGeometry(10, 8, 14);
+            arch.add(new THREE.Mesh(mainGeom, mats.cyanVol));
+            arch.add(new THREE.LineSegments(new THREE.EdgesGeometry(mainGeom), mats.cyan).position.set(0, 4, 0));
+
+            // MANSARD ROOF
+            const roofGeom = new THREE.CylinderGeometry(4, 5.5, 4, 4);
+            const roof = new THREE.Mesh(roofGeom, mats.cyanVol);
+            roof.position.y = 10;
+            roof.rotation.y = Math.PI / 4;
+            arch.add(roof);
+            const roofLines = new THREE.LineSegments(new THREE.EdgesGeometry(roofGeom), mats.cyan);
+            roofLines.position.y = 10;
+            roofLines.rotation.y = Math.PI / 4;
+            arch.add(roofLines);
+
+            // CELLAR
+            const cellarGeom = new THREE.BoxGeometry(9.5, 4, 13.5);
+            sub.add(new THREE.Mesh(cellarGeom, mats.pinkVol));
+            sub.add(new THREE.LineSegments(new THREE.EdgesGeometry(cellarGeom), mats.pink).position.set(0, -2, 0));
+
+            // WALL
+            const wallGeom = new THREE.BoxGeometry(0.5, 2.5, 25);
+            arch.add(new THREE.LineSegments(new THREE.EdgesGeometry(wallGeom), mats.cyan).position.set(-7, 1.25, 0));
+
+            group.add(arch, sub, createLayerGroup('hazard'), createLayerGroup('safety'), createLayerGroup('energy'));
+            return group;
+        }
+
+        function buildFarum() {
+            const group = new THREE.Group();
+            const arch = createLayerGroup('architecture');
+            const sub = createLayerGroup('substructure');
+            const energy = createLayerGroup('energy');
+
+            const cyanMat = new THREE.LineBasicMaterial({ color: 0x00ffcc });
+            const cyanVolMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.05, side: THREE.DoubleSide });
+            const pinkMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.5 });
+            const gridMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.2 });
+
+            // SCHOOL WING NORTH (Library/Museum)
+            const wingNGeom = new THREE.BoxGeometry(8, 4, 22);
+            const wingNWire = new THREE.LineSegments(new THREE.EdgesGeometry(wingNGeom), cyanMat);
+            const wingNVol = new THREE.Mesh(wingNGeom, cyanVolMat);
+            wingNWire.position.set(-8, 2, 0);
+            wingNVol.position.set(-8, 2, 0);
+            arch.add(wingNWire, wingNVol);
+
+            // Floor levels inside Wing N
+            for (let y of [1, 2, 3]) {
+                const floor = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(7.8, 21.8)), gridMat);
+                floor.rotation.x = Math.PI / 2;
+                floor.position.set(-8, y, 0);
+                arch.add(floor);
+            }
+
+            // SCHOOL WING SOUTH (Theater/Music)
+            const wingSGeom = new THREE.BoxGeometry(8, 6, 22);
+            const wingSWire = new THREE.LineSegments(new THREE.EdgesGeometry(wingSGeom), cyanMat);
+            const wingSVol = new THREE.Mesh(wingSGeom, cyanVolMat);
+            wingSWire.position.set(8, 3, 0);
+            wingSVol.position.set(8, 3, 0);
+            arch.add(wingSWire, wingSVol);
+
+            // CENTRAL FOYER (Atrium)
+            const foyerGeom = new THREE.BoxGeometry(8, 3.5, 18);
+            const foyerVol = new THREE.Mesh(foyerGeom, new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1 }));
+            foyerVol.position.set(0, 1.75, 0);
+            arch.add(foyerVol);
+
+            // GLASTAG (Advanced Grid Construction)
+            const roofRadius = 5;
+            const roofWidth = 18;
+            const roofGeom = new THREE.CylinderGeometry(roofRadius, roofRadius, roofWidth, 12, 6, true, 0, Math.PI);
+            const roofWire = new THREE.LineSegments(new THREE.EdgesGeometry(roofGeom), cyanMat);
+            roofWire.rotation.z = Math.PI / 2;
+            roofWire.position.set(0, 4, 0);
+            arch.add(roofWire);
+
+            // Roof Structural Beams
+            for (let i = -8; i <= 8; i += 2) {
+                const beamGeom = new THREE.TorusGeometry(roofRadius, 0.05, 8, 12, Math.PI);
+                const beam = new THREE.Mesh(beamGeom, cyanMat);
+                beam.rotation.y = Math.PI / 2;
+                beam.position.set(0, 4, i);
+                arch.add(beam);
+            }
+
+            // SUB-SURFACE (School Cellars/Tunnels)
+            const cellarGeom = new THREE.BoxGeometry(22, 3, 12);
+            const cellarWire = new THREE.LineSegments(new THREE.EdgesGeometry(cellarGeom), pinkMat);
+            cellarWire.position.y = -1.5;
+            sub.add(cellarWire);
+
+            // DATA NODES (Floating bits for technical look)
+            const nodeGeom = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+            for (let i = 0; i < 10; i++) {
+                const node = new THREE.Mesh(nodeGeom, new THREE.MeshBasicMaterial({ color: 0xff3366 }));
+                node.position.set(Math.random() * 20 - 10, Math.random() * 5, Math.random() * 20 - 10);
+                energy.add(node);
+            }
+
+            group.add(arch, sub, createLayerGroup('hazard'), createLayerGroup('safety'), energy);
+            return group;
+        }
+
         window.switchSubject = (id) => {
             currentSubject = id;
+            mapGroup.visible = (id === 'map');
             helsingorGroup.visible = (id === 'helsingor');
             ejbyGroup.visible = (id === 'ejby');
             hadsundvejGroup.visible = (id === 'hadsundvej12l');
+            sctanna38Group.visible = (id === 'sctanna38');
+            farumGroup.visible = (id === 'farum');
             
             document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.toggle('active', el.getAttribute('onclick').includes(id));
+                const onClick = el.getAttribute('onclick');
+                el.classList.toggle('active', onClick && onClick.includes(`'${id}'`));
             });
             
             document.getElementById('source-id').innerText = subjects[id].id;
             updateMetadata();
             updateLayerVisibility();
+
+            if (id === 'map') {
+                camera.position.set(10, 25, 15);
+                controls.target.set(10, 0, 5);
+            } else {
+                camera.position.set(20, 15, 20);
+                controls.target.set(0, 0, 0);
+            }
+            controls.update();
         };
 
         function updateMetadata() {
             const data = subjects[currentSubject];
             let html = `<div class="metadata-section"><span class="metadata-label">TITLE</span><span class="metadata-value">${data.title}</span></div>`;
+            
+            if (data.scan_url) {
+                html += `<button class="toggle-btn" style="width: 100%; margin-bottom: 20px; border-color: var(--neon-cyan); color: var(--neon-cyan);" onclick="window.location.href='${data.scan_url}'">ÅBEN DETALJERET SKAN</button>`;
+            }
+
             for (const [k, v] of Object.entries(data.metadata)) {
                 html += `<div class="metadata-section"><span class="metadata-label">${k.toUpperCase()}</span><span class="metadata-value ${k==='special'?'metadata-pink':''}">${v}</span></div>`;
             }
@@ -509,7 +806,7 @@
         };
 
         function updateLayerVisibility() {
-            [helsingorGroup, ejbyGroup, hadsundvejGroup].forEach(g => {
+            [mapGroup, helsingorGroup, ejbyGroup, hadsundvejGroup, sctanna38Group, farumGroup].forEach(g => {
                 g.children.forEach(l => {
                     if (layers[l.name] !== undefined) l.visible = layers[l.name];
                 });
@@ -527,6 +824,17 @@
             controls.update();
             const time = Date.now() * 0.001;
 
+            if (mapGroup.visible) {
+                mapGroup.children.forEach(child => {
+                    if (child.type === 'Mesh') {
+                        child.rotation.y += 0.01;
+                        if (child.geometry.type === 'ConeGeometry') {
+                            child.position.y = 1 + Math.sin(time * 2) * 0.2;
+                        }
+                    }
+                });
+            }
+
             if (helsingorGroup.visible) helsingorGroup.rotation.y += 0.001;
             if (ejbyGroup.visible) ejbyGroup.rotation.y += 0.001;
             if (hadsundvejGroup.visible) {
@@ -534,6 +842,8 @@
                 const hp = hadsundvejGroup.getObjectByName('hazard_pulse');
                 if (hp) hp.material.opacity = 0.1 + Math.sin(time * 3) * 0.1;
             }
+            if (sctanna38Group.visible) sctanna38Group.rotation.y += 0.001;
+            if (farumGroup.visible) farumGroup.rotation.y += 0.001;
 
             if (Math.random() > 0.9) {
                 document.getElementById('scanner-text').innerText = Math.random().toString(16).substr(2, 8).toUpperCase().match(/.{2}/g).join(':');
