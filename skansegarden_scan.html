@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>By-Research | Skansegården X-Ray Scan</title>
+    <style>
+        body { margin: 0; background: #050505; color: #00ffcc; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            border: 1px solid rgba(0, 255, 204, 0.1);
+            box-sizing: border-box;
+        }
+
+        #header { position: absolute; top: 20px; left: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        #header h1 { margin: 0; font-size: 18px; text-shadow: 0 0 10px #00ffcc; }
+        #header p { margin: 5px 0; font-size: 10px; color: #666; }
+
+        #data-feed {
+            position: absolute;
+            top: 20px; right: 20px;
+            text-align: right;
+            font-size: 10px;
+            color: rgba(0, 255, 204, 0.5);
+            line-height: 1.5;
+        }
+
+        #status-bar {
+            position: absolute;
+            bottom: 20px; left: 20px;
+            font-size: 11px;
+            background: rgba(0, 255, 204, 0.1);
+            padding: 5px 10px;
+            border-left: 3px solid #00ffcc;
+            color: #00ffcc;
+        }
+
+        #controls-hint { position: absolute; bottom: 20px; right: 20px; color: #444; font-size: 10px; }
+
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="ui-overlay">
+        <div id="header">
+            <h1>Subject: Skansegården</h1>
+            <p>SOCIAL_INFRA_SCAN_V1 | INSTITUTIONAL_CORE</p>
+        </div>
+
+        <div id="data-feed">
+            LOCATION: HILLERØD_SKANSEVEJ<br>
+            ESTABLISHED: 1869 (WORKHOUSE)<br>
+            STATUS: ACTIVE_CARE_HOME<br>
+            BUILDING_TYPE: YELLOW_BRICK_MASONRY<br><br>
+            STRUCTURAL_ELEMENTS:<br>
+            MAIN_WING: RESIDENTIAL_CORE<br>
+            NORTH_WING: ADMINISTRATION<br>
+            "GRISESTALDEN": HISTORIC_ANNEX<br>
+            ORANGERI: MODERN_SOCIAL_SPACE<br><br>
+            SUB-SURFACE:<br>
+            CELLAR_DEPTH: -3.5M<br>
+            UTILITY_TUNNELS: IDENTIFIED
+        </div>
+
+        <div id="status-bar">
+            MAPPING SOCIAL ARCHITECTURE // SCANNING MASONRY INTEGRITY // TRACING HISTORIC TUNNELS
+        </div>
+
+        <div id="controls-hint">ROT: MOUSE_L | ZOOM: SCROLL | PAN: MOUSE_R</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls;
+        let mainGroup, scanPlane;
+
+        const mats = {
+            cyan: new THREE.LineBasicMaterial({ color: 0x00ffcc }),
+            cyanFade: new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.2 }),
+            cyanVol: new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.05, side: THREE.DoubleSide }),
+            pink: new THREE.LineBasicMaterial({ color: 0xff3366 }),
+            pinkFade: new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.3 }),
+            pinkVol: new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.08, side: THREE.DoubleSide }),
+            grid: new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15 })
+        };
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(25, 20, 25);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            const grid = new THREE.GridHelper(60, 60, 0x111111, 0x222222);
+            scene.add(grid);
+
+            buildModel();
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function buildModel() {
+            mainGroup = new THREE.Group();
+            const group = mainGroup;
+
+            const roomMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+            const windowMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 });
+            const doorMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.8 });
+
+            // MAIN BUILDING (U-SHAPE CONCEPT)
+            // Center Wing
+            addBox(group, 0, 3, 0, 16, 6, 8, mats.cyan, mats.cyanVol);
+
+            // Internal Rooms (Center Wing)
+            addBox(group, -5, 3, 0, 4, 5.8, 7.8, mats.cyanFade, roomMat); // Room 1
+            addBox(group, 0, 3, 0, 4, 5.8, 7.8, mats.cyanFade, roomMat);  // Room 2 (Hall)
+            addBox(group, 5, 3, 0, 4, 5.8, 7.8, mats.cyanFade, roomMat);  // Room 3
+
+            // North Wing
+            addBox(group, -12, 3, 0, 8, 6, 12, mats.cyan, mats.cyanVol);
+            // Internal Rooms (North Wing - Administration)
+            addBox(group, -12, 3, -3, 7.8, 5.8, 4, mats.cyanFade, roomMat); // Office 1
+            addBox(group, -12, 3, 3, 7.8, 5.8, 4, mats.cyanFade, roomMat);  // Office 2
+
+            // South Wing
+            addBox(group, 12, 3, 0, 8, 6, 12, mats.cyan, mats.cyanVol);
+            // Internal Rooms (South Wing - Residential)
+            addBox(group, 12, 3, -4, 7.8, 5.8, 3, mats.cyanFade, roomMat); // Bed 1
+            addBox(group, 12, 3, 0, 7.8, 5.8, 3, mats.cyanFade, roomMat);  // Bed 2
+            addBox(group, 12, 3, 4, 7.8, 5.8, 3, mats.cyanFade, roomMat);  // Bed 3
+
+            // Details: Windows (Front facade of center wing)
+            for (let i = -6; i <= 6; i += 3) {
+                if (i !== 0) { // Skip center for door
+                    addBox(group, i, 3.5, 4, 1.5, 2.5, 0.2, windowMat, mats.cyanVol);
+                }
+            }
+
+            // Details: Main Entrance Door
+            addBox(group, 0, 1.5, 4, 2, 3, 0.2, doorMat, mats.pinkVol);
+
+            // Details: Side Doors (to courtyard)
+            addBox(group, -8, 1.5, 0, 0.2, 3, 1.5, doorMat, mats.pinkVol);
+            addBox(group, 8, 1.5, 0, 0.2, 3, 1.5, doorMat, mats.pinkVol);
+
+            // Details: Stairs to Main Entrance
+            addBox(group, 0, 0.25, 4.5, 3, 0.5, 1, mats.cyan, mats.cyanVol);
+            addBox(group, 0, 0.75, 4.25, 3, 0.5, 0.5, mats.cyan, mats.cyanVol);
+
+            // "GRISESTALDEN" (Long low building)
+            addBox(group, 0, 1.5, 15, 20, 3, 4, mats.cyan, mats.cyanVol);
+
+            // ORANGERI (Glass structure in courtyard)
+            const orangGeom = new THREE.BoxGeometry(6, 4, 6);
+            const orangMesh = new THREE.Mesh(orangGeom, new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.1 }));
+            orangMesh.position.set(0, 2, -10);
+            group.add(orangMesh);
+            const orangWire = new THREE.LineSegments(new THREE.EdgesGeometry(orangGeom), mats.pink);
+            orangWire.position.set(0, 2, -10);
+            group.add(orangWire);
+
+            // SUB-SURFACE (Cellars and Tunnels)
+            // Main Cellar
+            addBox(group, 0, -2, 0, 14, 4, 6, mats.pink, mats.pinkVol);
+
+            // North Wing Cellar
+            addBox(group, -12, -1.5, 0, 8, 3, 10, mats.pink, mats.pinkVol);
+
+            // South Wing Cellar
+            addBox(group, 12, -1.5, 0, 8, 3, 10, mats.pink, mats.pinkVol);
+
+            // Sub-surface details: Internal Cellar Walls
+            addBox(group, -3, -2, 0, 0.2, 3.8, 5.8, mats.pinkFade, mats.pinkVol);
+            addBox(group, 3, -2, 0, 0.2, 3.8, 5.8, mats.pinkFade, mats.pinkVol);
+
+            // Sub-surface details: Cellar Stairs (Descending from Hall)
+            addBox(group, 0, -0.5, 0, 2, 1, 2, mats.pink, mats.pinkVol);
+            addBox(group, 0, -1.5, 1, 2, 1, 2, mats.pink, mats.pinkVol);
+
+            // Shallow Connection tunnel to Orangeri
+            addBox(group, 0, -2, 7, 2, 2, 10, mats.pinkFade, mats.pinkVol);
+
+            // Deep Historic Utility Tunnel
+            addBox(group, -5, -6, 5, 2, 3, 25, mats.pink, mats.pinkVol);
+
+            // Deep Bunker / Old Workhouse Sub-level
+            addBox(group, -5, -6, -5, 6, 4, 6, mats.pink, mats.pinkVol);
+
+            scene.add(group);
+
+            // SCANNING PLANE
+            const planeGeom = new THREE.PlaneGeometry(60, 60);
+            const planeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
+            scanPlane = new THREE.Mesh(planeGeom, planeMat);
+            scanPlane.rotation.x = Math.PI / 2;
+            const planeWire = new THREE.LineSegments(new THREE.EdgesGeometry(planeGeom), mats.cyanFade);
+            scanPlane.add(planeWire);
+            scene.add(scanPlane);
+        }
+
+        function addBox(group, x, y, z, w, h, d, lineMat, volMat) {
+            const geom = new THREE.BoxGeometry(w, h, d);
+            const wire = new THREE.LineSegments(new THREE.EdgesGeometry(geom), lineMat);
+            const vol = new THREE.Mesh(geom, volMat);
+            wire.position.set(x, y, z);
+            vol.position.set(x, y, z);
+            group.add(wire, vol);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+
+            if (mainGroup) {
+                mainGroup.rotation.y += 0.002;
+            }
+
+            if (scanPlane) {
+                scanPlane.position.y = Math.sin(Date.now() * 0.001) * 8 - 1; // Scan between -9 and 7
+            }
+
+            // Subtle pulse on sub-surface volumes
+            if (mats.pinkVol) {
+                mats.pinkVol.opacity = 0.08 + Math.sin(Date.now() * 0.003) * 0.04;
+            }
+
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
