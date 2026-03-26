@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "50a057af17507c62",
+        "id": "d88c2250cd3b464b",
         "type": "tabs",
         "children": [
           {
-            "id": "091e8f2dca09297c",
+            "id": "cf40d20ce4e95cfd",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -177,8 +177,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "091e8f2dca09297c",
+  "active": "cf40d20ce4e95cfd",
   "lastOpenFiles": [
+    "skansegarden_scan.html",
     "Arkitektur/Skansevej_2C.md",
     "Byer/Hillerød.md",
     "Infrastruktur/Ejbybunkeren.md",
