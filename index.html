@@ -226,6 +226,7 @@
             <div class="nav-item" onclick="switchSubject('hadsundvej12l')">Hadsundvej 12L</div>
             <div class="nav-item" onclick="switchSubject('sctanna38')">Sct Anna Gade 38</div>
             <div class="nav-item" onclick="switchSubject('farum')">Farum Kulturhus</div>
+            <div class="nav-item" onclick="switchSubject('skansevej2c')">Skansegården (Hillerød)</div>
         </div>
 
         <div id="metadata-panel">
@@ -388,6 +389,19 @@
                     special: 'GLASTAG_FOYER',
                     status: 'KULTUR_HUB'
                 }
+            },
+            skansevej2c: {
+                id: 'SKANSEGAARDEN',
+                title: 'Skansegården',
+                metadata: {
+                    by: 'Hillerød',
+                    aarstal: '1869',
+                    type: 'Forsorgshjem / Tidligere Fattiggård',
+                    materiale: 'Gule Mursten',
+                    area: '2.500 m²',
+                    special: 'GRISESTALDEN',
+                    status: 'ACTIVE_SOCIAL_INFRA'
+                }
             }
         };
 
@@ -429,7 +443,7 @@
             window.addEventListener('resize', onWindowResize);
             
             renderer.domElement.addEventListener('click', (event) => {
-                if (currentSubject !== 'map') return;
+                if (currentSubject !== 'map' && currentSubject !== 'skansevej2c') return;
                 
                 const rect = renderer.domElement.getBoundingClientRect();
                 mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -470,6 +484,7 @@
                 { name: 'Helsingør Station', pos: [15, 0, 8], id: 'helsingor' },
                 { name: 'Sct Anna Gade 38', pos: [15.2, 0, 8.2], id: 'sctanna38' },
                 { name: 'Farum Kulturhus', pos: [11.5, 0, 6.0], id: 'farum' },
+                { name: 'Hillerød (Skansegården)', pos: [12.5, 0, 8.5], id: 'skansevej2c' },
                 { name: 'Rødovre (Ejby)', pos: [13, 0, 4], id: 'ejby' },
                 { name: 'Rødovre (Hadsundvej)', pos: [13.2, 0, 4.2], id: 'hadsundvej12l' },
                 { name: 'Svendborg', pos: [4, 0, 1], id: 'map' }
@@ -744,7 +759,7 @@
 
         window.switchSubject = (id) => {
             currentSubject = id;
-            mapGroup.visible = (id === 'map');
+            mapGroup.visible = (id === 'map' || id === 'skansevej2c');
             helsingorGroup.visible = (id === 'helsingor');
             ejbyGroup.visible = (id === 'ejby');
             hadsundvejGroup.visible = (id === 'hadsundvej12l');
@@ -763,6 +778,9 @@
             if (id === 'map') {
                 camera.position.set(10, 25, 15);
                 controls.target.set(10, 0, 5);
+            } else if (id === 'skansevej2c') {
+                camera.position.set(12.5, 10, 15);
+                controls.target.set(12.5, 0, 8.5);
             } else {
                 camera.position.set(20, 15, 20);
                 controls.target.set(0, 0, 0);
