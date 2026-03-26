@@ -54,19 +54,21 @@
             LOCATION: HILLERØD_SKANSEVEJ<br>
             ESTABLISHED: 1869 (WORKHOUSE)<br>
             STATUS: ACTIVE_CARE_HOME<br>
-            BUILDING_TYPE: YELLOW_BRICK_MASONRY<br><br>
+            BUILDING_TYPE: YELLOW_BRICK_MASONRY<br>
+            AREA: 2500 M²<br><br>
             STRUCTURAL_ELEMENTS:<br>
             MAIN_WING: RESIDENTIAL_CORE<br>
             NORTH_WING: ADMINISTRATION<br>
-            "GRISESTALDEN": HISTORIC_ANNEX<br>
-            ORANGERI: MODERN_SOCIAL_SPACE<br><br>
+            SOUTH_WING: CLINICAL_FACILITIES<br>
+            "GRISESTALDEN": HISTORIC_ANNEX_REMOD<br><br>
             SUB-SURFACE:<br>
-            CELLAR_DEPTH: -3.5M<br>
-            UTILITY_TUNNELS: IDENTIFIED
+            CELLAR_DEPTH: -3.0M<br>
+            UTILITY_TUNNELS: IDENTIFIED (X-AXIS)<br>
+            FOUNDATION: MASONRY_FOOTING
         </div>
 
         <div id="status-bar">
-            MAPPING SOCIAL ARCHITECTURE // SCANNING MASONRY INTEGRITY // TRACING HISTORIC TUNNELS
+            MAPPING SOCIAL ARCHITECTURE // SCANNING MASONRY INTEGRITY // TRACING HISTORIC TUNNELS // DATA SYNC COMPLETE
         </div>
 
         <div id="controls-hint">ROT: MOUSE_L | ZOOM: SCROLL | PAN: MOUSE_R</div>
@@ -105,7 +107,7 @@
             scene.background = new THREE.Color(0x050505);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(25, 20, 25);
+            camera.position.set(30, 25, 30);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -114,7 +116,7 @@
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
 
-            const grid = new THREE.GridHelper(60, 60, 0x111111, 0x222222);
+            const grid = new THREE.GridHelper(80, 40, 0x111111, 0x222222);
             scene.add(grid);
 
             buildModel();
@@ -126,25 +128,34 @@
 
             // MAIN BUILDING (U-SHAPE CONCEPT)
             // Center
-            addBox(group, 0, 3, 0, 16, 6, 8, mats.cyan, mats.cyanVol);
+            addBox(group, 0, 3, 0, 20, 8, 10, mats.cyan, mats.cyanVol);
             // North Wing
-            addBox(group, -12, 3, 0, 8, 6, 12, mats.cyan, mats.cyanVol);
+            addBox(group, -15, 3, 5, 10, 8, 20, mats.cyan, mats.cyanVol);
             // South Wing
-            addBox(group, 12, 3, 0, 8, 6, 12, mats.cyan, mats.cyanVol);
+            addBox(group, 15, 3, 5, 10, 8, 20, mats.cyan, mats.cyanVol);
 
-            // "GRISESTALDEN" (Long low building)
-            addBox(group, 0, 1.5, 15, 20, 3, 4, mats.cyan, mats.cyanVol);
+            // "GRISESTALDEN" (Historic Annex)
+            addBox(group, 0, 2, 25, 25, 4, 6, mats.cyanFade, mats.cyanVol);
 
-            // ORANGERI (Glass structure in courtyard)
-            const orangGeom = new THREE.BoxGeometry(6, 4, 6);
-            const orangMesh = new THREE.Mesh(orangGeom, new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.1 }));
-            orangMesh.position.set(0, 2, -10);
-            group.add(orangMesh);
-            group.add(new THREE.LineSegments(new THREE.EdgesGeometry(orangGeom), mats.pink).position.set(0, 2, -10));
+            // ORANGERI (Glass structure)
+            const orangGeom = new THREE.BoxGeometry(8, 5, 8);
+            const orangWire = new THREE.LineSegments(new THREE.EdgesGeometry(orangGeom), mats.pink);
+            const orangVol = new THREE.Mesh(orangGeom, new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.15 }));
+            orangWire.position.set(0, 2.5, -12);
+            orangVol.position.set(0, 2.5, -12);
+            group.add(orangWire, orangVol);
 
-            // SUB-SURFACE (Cellars and Tunnels)
-            addBox(group, 0, -2, 0, 14, 4, 6, mats.pink, mats.pinkVol);
-            addBox(group, 0, -2, 7, 2, 2, 10, mats.pinkFade, mats.pinkVol); // Connection tunnel
+            // SUB-SURFACE (Expanded Cellars and Tunnels)
+            // Central Cellar
+            addBox(group, 0, -2, 0, 18, 4, 8, mats.pink, mats.pinkVol);
+            // North Cellar
+            addBox(group, -15, -2, 5, 8, 4, 18, mats.pinkFade, mats.pinkVol);
+            // South Cellar
+            addBox(group, 15, -2, 5, 8, 4, 18, mats.pinkFade, mats.pinkVol);
+
+            // UTILITY TUNNELS (Deep Network)
+            addBox(group, 0, -2, 15, 2, 2, 15, mats.pink, mats.pinkVol); // Main connection to Grisestald
+            addBox(group, -10, -2, 0, 20, 2, 2, mats.pinkFade, mats.pinkVol); // Horizontal utility
 
             scene.add(group);
         }
