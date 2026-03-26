@@ -11,6 +11,9 @@ on:
         required: true
         default: '{"city": "Aarhus", "year": "1927", "area": 1200, "architect": "Knut Tanggaard Seest", "style": "Nyklassicisme", "foundation_type": "Pælefundering", "depth": "-8.5m", "description": "Hovedbanegården i Aarhus er et arkitektonisk knudepunkt.", "hidden_infra_type": "Jernbanetunneller"}'
 
+permissions:
+  contents: write
+
 jobs:
   research:
     runs-on: ubuntu-latest
