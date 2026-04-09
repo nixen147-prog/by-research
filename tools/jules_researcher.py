@@ -21,33 +21,31 @@ class JulesResearcher:
         area = data.get("area", 1000)
         piles = data.get("piles", int(area / 6.25)) # Estimate 1 pile per 6.25m2
         depth = data.get("depth", "-6.0m")
-        
-        content = f"""# Bygning: {location}
 
-- **By:** [[Byer/{data.get("city", "Ukendt")}]]
-- **Årstal:** {data.get("year", "Ukendt")}
-- **Arkitekt:** {data.get("architect", "Ukendt")}
-- **Stilart:** {data.get("style", "Ukendt")}
+        template_path = "Templates/Bygning.md"
+        with open(template_path, "r", encoding="utf-8") as f:
+            content = f.read()
 
----
+        replacements = {
+            "{{name}}": location,
+            "{{city}}": data.get("city", "Ukendt"),
+            "{{year}}": str(data.get("year", "Ukendt")),
+            "{{architect}}": data.get("architect", "Ukendt"),
+            "{{style}}": data.get("style", "Ukendt"),
+            "{{area}}": str(area),
+            "{{foundation_type}}": data.get("foundation_type", "Pælefundering"),
+            "{{piles}}": str(piles),
+            "{{depth}}": str(depth),
+            "{{description}}": data.get("description", "Research i gang..."),
+            "{{hidden_infra_type}}": data.get("hidden_infra_type", "Ukendt"),
+            "{{status}}": data.get("status", "Identificeret"),
+            "{{photo_link}}": data.get("photo_link", "mangler.jpg"),
+            "{{date}}": datetime.now().strftime('%Y-%m-%d')
+        }
 
-## Tekniske Data (Mål)
-- **Areal:** {area} m²
-- **Fundament:** {data.get("foundation_type", "Pælefundering")}
-- **Antal pæle (Estimeret):** {piles}
-- **Dybde:** {depth}
+        for key, value in replacements.items():
+            content = content.replace(key, value)
 
-## Historie & Beskrivelse
-{data.get("description", "Research i gang...")}
-
-## Skjult Infrastruktur
-- **Type:** {data.get("hidden_infra_type", "Ukendt")}
-- **Status:** {data.get("status", "Identificeret")}
-
----
-Tags: #arkitektur #bygning #jules-research #maalinger
-Created: {datetime.now().strftime('%Y-%m-%d')}
-"""
         with open(filename, "w", encoding="utf-8") as f:
             f.write(content)
         

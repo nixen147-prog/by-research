@@ -22,3 +22,4 @@ Tunneller, bunkere, forladte anlæg.
 
 ---
 Tags: #by #research
+Created: {{date}}

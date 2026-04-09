@@ -305,12 +305,15 @@
                 { id: 'P-12A',  depth: 8.0,  pos: [-25.75, 0, 13] } // In basement area
             ];
             
+            const wellGeoms = {};
             wells.forEach(w => {
-                const wellGeom = new THREE.BufferGeometry().setFromPoints([
-                    new THREE.Vector3(0, 0, 0),
-                    new THREE.Vector3(0, -w.depth, 0)
-                ]);
-                const well = new THREE.LineSegments(wellGeom, wellMat);
+                if (!wellGeoms[w.depth]) {
+                    wellGeoms[w.depth] = new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(0, 0, 0),
+                        new THREE.Vector3(0, -w.depth, 0)
+                    ]);
+                }
+                const well = new THREE.LineSegments(wellGeoms[w.depth], wellMat);
                 well.position.set(...w.pos);
                 industrialGroup.add(well);
                 
